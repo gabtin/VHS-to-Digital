@@ -1,7 +1,9 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Package,
   Download,
@@ -26,43 +28,35 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive", icon: Clock },
 };
 
-const mockOrders: Partial<Order>[] = [
-  {
-    id: "1",
-    orderNumber: "RR-2024-001234",
-    status: "in_progress",
-    totalTapes: 5,
-    total: "195.00",
-    createdAt: new Date("2024-12-15"),
-  },
-  {
-    id: "2",
-    orderNumber: "RR-2024-001189",
-    status: "complete",
-    totalTapes: 3,
-    total: "125.00",
-    createdAt: new Date("2024-11-28"),
-    downloadUrl: "https://example.com/download",
-  },
-  {
-    id: "3",
-    orderNumber: "RR-2024-001102",
-    status: "complete",
-    totalTapes: 8,
-    total: "320.00",
-    createdAt: new Date("2024-10-15"),
-    downloadUrl: "https://example.com/download",
-  },
-];
-
 export default function Dashboard() {
-  const hasOrders = mockOrders.length > 0;
-  const activeOrders = mockOrders.filter(o => o.status !== "complete" && o.status !== "cancelled");
-  const completedOrders = mockOrders.filter(o => o.status === "complete");
+  const { data: orders = [], isLoading } = useQuery<Order[]>({
+    queryKey: ["/api/orders"],
+  });
+
+  const hasOrders = orders.length > 0;
+  const activeOrders = orders.filter(o => o.status !== "complete" && o.status !== "cancelled");
+  const completedOrders = orders.filter(o => o.status === "complete");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-card border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Skeleton className="h-10 w-48" />
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -86,7 +80,6 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!hasOrders ? (
-          /* Empty State */
           <Card className="max-w-lg mx-auto" data-testid="card-empty-state">
             <CardContent className="py-16 text-center">
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-secondary flex items-center justify-center">
@@ -108,7 +101,6 @@ export default function Dashboard() {
           </Card>
         ) : (
           <div className="space-y-8">
-            {/* Active Orders */}
             {activeOrders.length > 0 && (
               <section>
                 <h2 className="text-xl font-semibold text-foreground mb-4" data-testid="text-active-orders">
@@ -122,21 +114,25 @@ export default function Dashboard() {
                         <CardContent className="p-6">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="font-semibold text-foreground">{order.orderNumber}</h3>
-                                <Badge className={status.color}>
+                              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                <span className="font-semibold text-foreground" data-testid={`text-order-number-${order.id}`}>
+                                  {order.orderNumber}
+                                </span>
+                                <Badge className={status.color} size="sm">
                                   {status.label}
                                 </Badge>
                               </div>
-                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-3">
                                 <span>{order.totalTapes} tapes</span>
+                                <span className="text-muted-foreground/50">|</span>
                                 <span>${order.total}</span>
-                                <span>Ordered {order.createdAt?.toLocaleDateString()}</span>
+                                <span className="text-muted-foreground/50">|</span>
+                                <span>{new Date(order.createdAt!).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <Link href={`/order/${order.id}`}>
-                              <Button variant="outline" data-testid={`button-view-${order.id}`}>
-                                View Status
+                            <Link href={`/order/${order.orderNumber}`}>
+                              <Button variant="outline" data-testid={`button-track-${order.id}`}>
+                                Track Order
                                 <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
                             </Link>
@@ -149,83 +145,78 @@ export default function Dashboard() {
               </section>
             )}
 
-            {/* Completed Orders */}
             {completedOrders.length > 0 && (
               <section>
                 <h2 className="text-xl font-semibold text-foreground mb-4" data-testid="text-completed-orders">
                   Completed Orders
                 </h2>
                 <div className="space-y-4">
-                  {completedOrders.map((order) => (
-                    <Card key={order.id} data-testid={`card-order-${order.id}`}>
-                      <CardContent className="p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-semibold text-foreground">{order.orderNumber}</h3>
-                              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                Complete
-                              </Badge>
+                  {completedOrders.map((order) => {
+                    const status = statusConfig[order.status as string] || statusConfig.complete;
+                    return (
+                      <Card key={order.id} data-testid={`card-order-${order.id}`}>
+                        <CardContent className="p-6">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                <span className="font-semibold text-foreground" data-testid={`text-order-number-${order.id}`}>
+                                  {order.orderNumber}
+                                </span>
+                                <Badge className={status.color} size="sm">
+                                  {status.label}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-3">
+                                <span>{order.totalTapes} tapes</span>
+                                <span className="text-muted-foreground/50">|</span>
+                                <span>${order.total}</span>
+                                <span className="text-muted-foreground/50">|</span>
+                                <span>{new Date(order.createdAt!).toLocaleDateString()}</span>
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                              <span>{order.totalTapes} tapes</span>
-                              <span>${order.total}</span>
-                              <span>Completed {order.createdAt?.toLocaleDateString()}</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {order.downloadUrl && (
+                                <Button className="bg-accent text-accent-foreground" data-testid={`button-download-${order.id}`}>
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download
+                                </Button>
+                              )}
+                              <Link href={`/order/${order.orderNumber}`}>
+                                <Button variant="outline" data-testid={`button-view-${order.id}`}>
+                                  View Details
+                                </Button>
+                              </Link>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            {order.downloadUrl && (
-                              <Button className="bg-accent text-accent-foreground" data-testid={`button-download-${order.id}`}>
-                                <Download className="w-4 h-4 mr-2" />
-                                Download
-                              </Button>
-                            )}
-                            <Link href={`/order/${order.id}`}>
-                              <Button variant="outline" data-testid={`button-details-${order.id}`}>
-                                Details
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </section>
             )}
-          </div>
-        )}
 
-        {/* Quick Stats */}
-        {hasOrders && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground" data-testid="stat-total-orders">
-                  {mockOrders.length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Tapes Converted</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground" data-testid="stat-total-tapes">
-                  {mockOrders.reduce((sum, o) => sum + (o.totalTapes || 0), 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-accent" data-testid="stat-active-orders">
-                  {activeOrders.length}
+            <Card data-testid="card-stats">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                    <div className="mt-2 text-3xl font-bold text-foreground" data-testid="text-total-orders">
+                      {orders.length}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Tapes Converted</CardTitle>
+                    <div className="mt-2 text-3xl font-bold text-foreground" data-testid="text-total-tapes">
+                      {orders.reduce((sum, o) => sum + (o.totalTapes || 0), 0)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Lifetime Value</CardTitle>
+                    <div className="mt-2 text-3xl font-bold text-accent" data-testid="text-total-spent">
+                      ${orders.reduce((sum, o) => sum + parseFloat(o.total || "0"), 0).toFixed(2)}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

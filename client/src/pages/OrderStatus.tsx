@@ -1,7 +1,9 @@
 import { useParams, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle2,
   Circle,
@@ -12,8 +14,10 @@ import {
   Sparkles,
   ArrowLeft,
   FileText,
-  HelpCircle
+  HelpCircle,
+  AlertCircle
 } from "lucide-react";
+import type { Order, TapeFormat } from "@shared/schema";
 
 const orderSteps = [
   { id: "pending", label: "Order Placed", icon: FileText, description: "Your order has been confirmed" },
@@ -26,37 +30,61 @@ const orderSteps = [
   { id: "complete", label: "Complete", icon: CheckCircle2, description: "All done!" },
 ];
 
-const mockOrder = {
-  id: "1",
-  orderNumber: "RR-2024-001234",
-  status: "in_progress",
-  totalTapes: 5,
-  estimatedHours: 15,
-  outputFormats: ["mp4", "usb"],
-  tapeHandling: "dispose",
-  processingSpeed: "standard",
-  total: "195.00",
-  createdAt: new Date("2024-12-15"),
-  dueDate: new Date("2025-01-05"),
-  shippingName: "John Doe",
-  shippingAddress: "123 Main St",
-  shippingCity: "San Francisco",
-  shippingState: "CA",
-  shippingZip: "94102",
-  tapeFormats: { vhs: 3, hi8: 2 },
-};
-
 export default function OrderStatus() {
   const { id } = useParams<{ id: string }>();
-  const order = mockOrder;
+  
+  const { data: order, isLoading, error } = useQuery<Order>({
+    queryKey: ["/api/orders/number", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/orders/number/${id}`);
+      if (!res.ok) throw new Error("Order not found");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-card border-b">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Skeleton className="h-8 w-64 mb-4" />
+            <Skeleton className="h-10 w-48" />
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="py-12 text-center">
+            <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Order Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              We couldn't find an order with that number. Please check and try again.
+            </p>
+            <Link href="/dashboard">
+              <Button data-testid="button-back-dashboard">Back to Dashboard</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   const currentStepIndex = orderSteps.findIndex(step => step.id === order.status);
   const isComplete = order.status === "complete";
   const isReadyForDownload = order.status === "ready_for_download" || isComplete;
+  const tapeFormats = order.tapeFormats as Record<TapeFormat, number>;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-card border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link href="/dashboard" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
@@ -65,7 +93,7 @@ export default function OrderStatus() {
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-foreground" data-testid="text-order-number">
                   Order {order.orderNumber}
                 </h1>
@@ -78,14 +106,16 @@ export default function OrderStatus() {
                 </Badge>
               </div>
               <p className="text-muted-foreground">
-                Ordered on {order.createdAt.toLocaleDateString()}
+                Ordered on {new Date(order.createdAt!).toLocaleDateString()}
               </p>
             </div>
-            {isReadyForDownload && (
-              <Button className="bg-accent text-accent-foreground" data-testid="button-download-files">
-                <Download className="w-4 h-4 mr-2" />
-                Download Files
-              </Button>
+            {isReadyForDownload && order.downloadUrl && (
+              <a href={order.downloadUrl} target="_blank" rel="noopener noreferrer">
+                <Button className="bg-accent text-accent-foreground" data-testid="button-download-files">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Files
+                </Button>
+              </a>
             )}
           </div>
         </div>
@@ -93,21 +123,18 @@ export default function OrderStatus() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Progress Tracker */}
           <div className="lg:col-span-2">
             <Card data-testid="card-progress-tracker">
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-6">Order Progress</h2>
                 
                 <div className="relative">
-                  {/* Progress Line */}
                   <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
                   <div 
                     className="absolute left-5 top-0 w-0.5 bg-accent transition-all duration-500" 
-                    style={{ height: `${(currentStepIndex / (orderSteps.length - 1)) * 100}%` }}
+                    style={{ height: `${Math.max(0, (currentStepIndex / (orderSteps.length - 1)) * 100)}%` }}
                   />
 
-                  {/* Steps */}
                   <div className="space-y-6">
                     {orderSteps.map((step, index) => {
                       const isCompleted = index < currentStepIndex;
@@ -149,7 +176,6 @@ export default function OrderStatus() {
               </CardContent>
             </Card>
 
-            {/* Next Steps */}
             {!isComplete && (
               <Card className="mt-6" data-testid="card-next-steps">
                 <CardContent className="p-6">
@@ -194,7 +220,7 @@ export default function OrderStatus() {
                   ) : (
                     <p className="text-muted-foreground">
                       We're working on your order! You'll receive an email when your files are ready.
-                      Estimated completion: {order.dueDate?.toLocaleDateString()}.
+                      {order.dueDate && ` Estimated completion: ${new Date(order.dueDate).toLocaleDateString()}.`}
                     </p>
                   )}
                 </CardContent>
@@ -202,7 +228,6 @@ export default function OrderStatus() {
             )}
           </div>
 
-          {/* Order Details */}
           <div className="lg:col-span-1 space-y-6">
             <Card data-testid="card-order-details">
               <CardContent className="p-6">
@@ -225,7 +250,7 @@ export default function OrderStatus() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Output</span>
                     <span className="text-foreground font-medium">
-                      {order.outputFormats.map(f => f.toUpperCase()).join(", ")}
+                      {(order.outputFormats as string[]).map(f => f.toUpperCase()).join(", ")}
                     </span>
                   </div>
                   <div className="border-t pt-3 flex justify-between">
