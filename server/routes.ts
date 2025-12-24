@@ -52,9 +52,11 @@ export async function registerRoutes(
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
       const parsed = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByEmail(parsed.email);
-      if (existingUser) {
-        return res.status(400).json({ error: "User with this email already exists" });
+      if (parsed.email) {
+        const existingUser = await storage.getUserByEmail(parsed.email);
+        if (existingUser) {
+          return res.status(400).json({ error: "User with this email already exists" });
+        }
       }
       const user = await storage.createUser(parsed);
       res.status(201).json(user);

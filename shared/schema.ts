@@ -3,11 +3,17 @@ import { pgTable, text, varchar, integer, boolean, timestamp, decimal, jsonb } f
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Export sessions table from auth module
+export { sessions } from "./models/auth";
+
 // Users table for customer authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
-  name: text("name").notNull(),
+  email: text("email").unique(),
+  name: text("name"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
   phone: text("phone"),
   defaultAddress: text("default_address"),
   defaultCity: text("default_city"),
@@ -15,7 +21,12 @@ export const users = pgTable("users", {
   defaultZip: text("default_zip"),
   isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// User types for auth
+export type UpsertUser = typeof users.$inferInsert;
+export type AuthUser = typeof users.$inferSelect;
 
 // Tape format enum values
 export const tapeFormats = ["vhs", "vhsc", "hi8", "minidv", "betamax"] as const;

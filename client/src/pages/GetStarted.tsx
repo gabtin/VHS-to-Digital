@@ -733,12 +733,28 @@ export default function GetStarted() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Link href="/checkout">
-                  <Button className="bg-accent text-accent-foreground" data-testid="button-checkout">
-                    Continue to Checkout
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button 
+                  className="bg-accent text-accent-foreground" 
+                  data-testid="button-checkout"
+                  onClick={() => {
+                    const orderConfig = {
+                      tapeFormats: quantities,
+                      totalTapes,
+                      estimatedHours,
+                      outputFormats,
+                      dvdQuantity: outputFormats.includes("dvd") ? dvdQuantity : 0,
+                      tapeHandling,
+                      processingSpeed,
+                      specialInstructions,
+                      isGift,
+                    };
+                    localStorage.setItem("orderConfig", JSON.stringify(orderConfig));
+                    window.location.href = "/checkout";
+                  }}
+                >
+                  Continue to Checkout
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               )}
             </div>
           </div>

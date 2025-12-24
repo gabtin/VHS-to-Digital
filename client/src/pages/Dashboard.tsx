@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Package,
   Download,
@@ -12,7 +13,8 @@ import {
   ArrowRight,
   Plus,
   Eye,
-  FileVideo
+  FileVideo,
+  LogIn
 } from "lucide-react";
 import type { Order } from "@shared/schema";
 
@@ -29,15 +31,24 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 };
 
 export default function Dashboard() {
-  const { data: orders = [], isLoading } = useQuery<Order[]>({
-    queryKey: ["/api/orders"],
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  
+  const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
+    queryKey: ["/api/orders/user", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const res = await fetch(`/api/orders/user/${user.id}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!user?.id,
   });
 
   const hasOrders = orders.length > 0;
   const activeOrders = orders.filter(o => o.status !== "complete" && o.status !== "cancelled");
   const completedOrders = orders.filter(o => o.status === "complete");
 
-  if (isLoading) {
+  if (authLoading || ordersLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-card border-b">
@@ -51,6 +62,32 @@ export default function Dashboard() {
             <Skeleton className="h-32 w-full" />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-auto" data-testid="card-login-prompt">
+          <CardContent className="py-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-secondary flex items-center justify-center">
+              <LogIn className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Sign in to view your orders
+            </h2>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              Log in to track your orders and access your digital files.
+            </p>
+            <a href="/api/login">
+              <Button className="bg-accent text-accent-foreground" data-testid="button-login">
+                <LogIn className="w-4 h-4 mr-2" />
+                Log In
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -118,7 +155,7 @@ export default function Dashboard() {
                                 <span className="font-semibold text-foreground" data-testid={`text-order-number-${order.id}`}>
                                   {order.orderNumber}
                                 </span>
-                                <Badge className={status.color} size="sm">
+                                <Badge className={status.color}>
                                   {status.label}
                                 </Badge>
                               </div>
@@ -162,7 +199,7 @@ export default function Dashboard() {
                                 <span className="font-semibold text-foreground" data-testid={`text-order-number-${order.id}`}>
                                   {order.orderNumber}
                                 </span>
-                                <Badge className={status.color} size="sm">
+                                <Badge className={status.color}>
                                   {status.label}
                                 </Badge>
                               </div>

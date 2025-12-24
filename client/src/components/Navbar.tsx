@@ -1,12 +1,22 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
-import { Sun, Moon, Menu, X, Film } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Sun, Moon, Menu, X, Film, LogOut, User } from "lucide-react";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -20,6 +30,29 @@ export function Navbar() {
     if (path === "/" && location === "/") return true;
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
+  };
+
+  const getInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user?.name) {
+      return user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return "U";
+  };
+
+  const getDisplayName = () => {
+    if (user?.firstName) {
+      return user.firstName;
+    }
+    if (user?.name) {
+      return user.name.split(" ")[0];
+    }
+    return user?.email?.split("@")[0] || "User";
   };
 
   return (
@@ -65,16 +98,56 @@ export function Navbar() {
             </Button>
 
             <div className="hidden md:flex items-center gap-2">
-              <Link href="/dashboard">
-                <Button variant="outline" size="sm" data-testid="link-dashboard">
-                  Dashboard
-                </Button>
-              </Link>
-              <Link href="/get-started">
-                <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
-                  Start Order
-                </Button>
-              </Link>
+              {isLoading ? (
+                <div className="w-20 h-8 bg-muted rounded animate-pulse" />
+              ) : isAuthenticated && user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
+                      <Avatar className="w-7 h-7">
+                        <AvatarImage src={user.profileImageUrl || undefined} />
+                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{getDisplayName()}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <Link href="/dashboard">
+                      <DropdownMenuItem data-testid="link-dashboard">
+                        <User className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </DropdownMenuItem>
+                    </Link>
+                    {user.isAdmin && (
+                      <Link href="/admin">
+                        <DropdownMenuItem data-testid="link-admin">
+                          Admin Panel
+                        </DropdownMenuItem>
+                      </Link>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => logout()} data-testid="button-logout">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Log Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <a href="/api/login">
+                    <Button variant="outline" size="sm" data-testid="button-login">
+                      Log In
+                    </Button>
+                  </a>
+                  <Link href="/get-started">
+                    <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
+                      Start Order
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             <Button
@@ -104,16 +177,48 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full" data-testid="link-mobile-dashboard">
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link href="/get-started" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full bg-accent text-accent-foreground" data-testid="button-mobile-cta">
-                    Start Order
-                  </Button>
-                </Link>
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="flex items-center gap-2 px-4 py-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={user.profileImageUrl || undefined} />
+                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{getDisplayName()}</span>
+                    </div>
+                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full" data-testid="link-mobile-dashboard">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    {user.isAdmin && (
+                      <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full" data-testid="link-mobile-admin">
+                          Admin Panel
+                        </Button>
+                      </Link>
+                    )}
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => logout()} data-testid="button-mobile-logout">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Log Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <a href="/api/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full" data-testid="button-mobile-login">
+                        Log In
+                      </Button>
+                    </a>
+                    <Link href="/get-started" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-accent text-accent-foreground" data-testid="button-mobile-cta">
+                        Start Order
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
