@@ -95,6 +95,9 @@ export const orders = pgTable("orders", {
   rushFee: decimal("rush_fee", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   
+  // Payment
+  stripeSessionId: text("stripe_session_id").unique(),
+  
   // Tracking
   trackingNumber: text("tracking_number"),
   downloadUrl: text("download_url"),

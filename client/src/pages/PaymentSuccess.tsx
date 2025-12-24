@@ -18,28 +18,19 @@ export default function PaymentSuccess() {
 
   const createOrderMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      const sessionRes = await fetch(`/api/stripe/session/${sessionId}`);
-      if (!sessionRes.ok) throw new Error("Failed to retrieve session");
-      const { session } = await sessionRes.json();
-      
-      if (session.payment_status !== "paid") {
-        throw new Error("Payment not completed");
-      }
-
-      const orderConfig = JSON.parse(session.metadata.orderConfig);
-      const shippingInfo = JSON.parse(session.metadata.shippingInfo);
-      
-      const response = await apiRequest("POST", "/api/orders", {
-        ...orderConfig,
-        ...shippingInfo,
-        stripeSessionId: sessionId,
-        paymentStatus: "paid",
+      const response = await apiRequest("POST", "/api/stripe/verify-and-create-order", {
+        sessionId,
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to verify payment");
+      }
       
       return await response.json();
     },
     onSuccess: (data) => {
-      setOrderResult(data);
+      setOrderResult(data.order);
       localStorage.removeItem("orderConfig");
     },
     onError: (err: any) => {

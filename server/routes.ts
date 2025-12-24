@@ -162,12 +162,20 @@ export async function registerRoutes(
 
   app.post("/api/stripe/create-checkout-session", async (req: Request, res: Response) => {
     try {
-      const { orderId, orderConfig, shippingInfo, pricing } = req.body;
+      const { orderConfig, shippingInfo } = req.body;
+      
+      const parsedConfig = orderConfigSchema.parse(orderConfig);
+      const parsedShipping = shippingInfoSchema.extend({
+        email: z.string().email(),
+        name: z.string().min(1),
+      }).parse(shippingInfo);
+
+      const serverPricing = calculatePricing(parsedConfig);
 
       const stripe = await getUncachableStripeClient();
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
       
-      const totalTapes = Object.values(orderConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
+      const totalTapes = Object.values(parsedConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
       
       const lineItems: any[] = [];
       
@@ -177,15 +185,15 @@ export async function registerRoutes(
             currency: 'usd',
             product_data: {
               name: `VHS-to-Digital Conversion (${totalTapes} tapes)`,
-              description: `${orderConfig.estimatedHours} hours of footage`,
+              description: `${parsedConfig.estimatedHours} hours of footage`,
             },
-            unit_amount: Math.round(pricing.subtotal * 100),
+            unit_amount: Math.round(serverPricing.subtotal * 100),
           },
           quantity: 1,
         });
       }
       
-      if (pricing.rushFee > 0) {
+      if (serverPricing.rushFee > 0) {
         lineItems.push({
           price_data: {
             currency: 'usd',
@@ -193,7 +201,7 @@ export async function registerRoutes(
               name: 'Rush Processing Fee',
               description: 'Priority 3-5 day processing',
             },
-            unit_amount: Math.round(pricing.rushFee * 100),
+            unit_amount: Math.round(serverPricing.rushFee * 100),
           },
           quantity: 1,
         });
@@ -205,10 +213,11 @@ export async function registerRoutes(
         mode: 'payment',
         success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/checkout?cancelled=true`,
-        customer_email: shippingInfo.email,
+        customer_email: parsedShipping.email,
         metadata: {
-          orderConfig: JSON.stringify(orderConfig),
-          shippingInfo: JSON.stringify(shippingInfo),
+          orderConfig: JSON.stringify(parsedConfig),
+          shippingInfo: JSON.stringify(parsedShipping),
+          serverPricing: JSON.stringify(serverPricing),
         },
       });
 
@@ -227,6 +236,80 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Get session error:", error);
       res.status(500).json({ error: error.message || "Failed to get session" });
+    }
+  });
+
+  app.post("/api/stripe/verify-and-create-order", async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+
+      const existingOrder = await storage.getOrderByStripeSessionId(sessionId);
+      if (existingOrder) {
+        return res.json({ order: existingOrder, session: { id: sessionId } });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      
+      if (session.payment_status !== 'paid') {
+        return res.status(400).json({ error: "Payment not completed" });
+      }
+      
+      if (!session.metadata?.orderConfig || !session.metadata?.shippingInfo || !session.metadata?.serverPricing) {
+        return res.status(400).json({ error: "Invalid session metadata" });
+      }
+
+      const orderConfig = JSON.parse(session.metadata.orderConfig);
+      const shippingInfo = JSON.parse(session.metadata.shippingInfo);
+      const pricing = JSON.parse(session.metadata.serverPricing);
+      
+      let user = await storage.getUserByEmail(shippingInfo.email);
+      if (!user) {
+        user = await storage.createUser({
+          email: shippingInfo.email,
+          name: shippingInfo.name,
+          phone: shippingInfo.shippingPhone || null,
+          defaultAddress: shippingInfo.shippingAddress,
+          defaultCity: shippingInfo.shippingCity,
+          defaultState: shippingInfo.shippingState,
+          defaultZip: shippingInfo.shippingZip,
+        });
+      }
+      
+      const totalTapes = Object.values(orderConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
+      
+      const order = await storage.createOrder({
+        userId: user.id,
+        status: "pending",
+        tapeFormats: orderConfig.tapeFormats as Record<TapeFormat, number>,
+        totalTapes,
+        estimatedHours: orderConfig.estimatedHours,
+        outputFormats: orderConfig.outputFormats as OutputFormat[],
+        dvdQuantity: orderConfig.dvdQuantity || 0,
+        tapeHandling: orderConfig.tapeHandling,
+        processingSpeed: orderConfig.processingSpeed,
+        shippingName: shippingInfo.shippingName,
+        shippingAddress: shippingInfo.shippingAddress,
+        shippingCity: shippingInfo.shippingCity,
+        shippingState: shippingInfo.shippingState,
+        shippingZip: shippingInfo.shippingZip,
+        shippingPhone: shippingInfo.shippingPhone || null,
+        specialInstructions: orderConfig.specialInstructions || null,
+        isGift: orderConfig.isGift || false,
+        subtotal: pricing.subtotal.toString(),
+        rushFee: pricing.rushFee.toString(),
+        total: pricing.total.toString(),
+        stripeSessionId: sessionId,
+      });
+
+      res.json({ order, session });
+    } catch (error: any) {
+      console.error("Verify and create order error:", error);
+      res.status(500).json({ error: error.message || "Failed to verify payment and create order" });
     }
   });
 
