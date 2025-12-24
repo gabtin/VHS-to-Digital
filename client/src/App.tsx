@@ -18,6 +18,7 @@ import AdminOrders from "@/pages/AdminOrders";
 import AdminOrderDetail from "@/pages/AdminOrderDetail";
 import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 
 function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -72,6 +73,11 @@ function Router() {
       <Route path="/order-confirmation">
         <CustomerLayout>
           <OrderConfirmation />
+        </CustomerLayout>
+      </Route>
+      <Route path="/payment-success">
+        <CustomerLayout>
+          <PaymentSuccess />
         </CustomerLayout>
       </Route>
       <Route path="/admin" component={Admin} />

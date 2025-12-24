@@ -133,33 +133,43 @@ export default function Checkout() {
     },
   });
 
-  const createOrderMutation = useMutation({
+  const createCheckoutMutation = useMutation({
     mutationFn: async (data: ShippingFormValues) => {
-      if (!orderConfig) throw new Error("Order configuration not found");
+      if (!orderConfig || !pricing) throw new Error("Order configuration not found");
       
-      const orderData = {
-        ...orderConfig,
-        ...data,
-      };
-      
-      const response = await apiRequest("POST", "/api/orders", orderData);
+      const response = await apiRequest("POST", "/api/stripe/create-checkout-session", {
+        orderConfig,
+        shippingInfo: data,
+        pricing: {
+          subtotal: pricing.subtotal,
+          rushFee: pricing.rushFee,
+          total: pricing.total,
+        },
+      });
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.removeItem("orderConfig");
-      setLocation(`/order-confirmation?orderNumber=${data.orderNumber}&orderId=${data.id}`);
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create checkout session",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create order. Please try again.",
+        description: error.message || "Failed to start checkout. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: ShippingFormValues) => {
-    createOrderMutation.mutate(data);
+    createCheckoutMutation.mutate(data);
   };
 
   if (!orderConfig || !pricing) {
@@ -363,19 +373,19 @@ export default function Checkout() {
                     <Button 
                       type="submit" 
                       size="lg" 
-                      className="w-full"
-                      disabled={createOrderMutation.isPending}
+                      className="w-full bg-accent text-accent-foreground"
+                      disabled={createCheckoutMutation.isPending}
                       data-testid="button-place-order"
                     >
-                      {createOrderMutation.isPending ? (
+                      {createCheckoutMutation.isPending ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Placing Order...
+                          Redirecting to payment...
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Place Order - ${pricing.total.toFixed(2)}
+                          Pay ${pricing.total.toFixed(2)}
                         </>
                       )}
                     </Button>

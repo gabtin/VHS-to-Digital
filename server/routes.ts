@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertOrderSchema, insertOrderNoteSchema, orderConfigSchema, PRICING, type TapeFormat, type OutputFormat } from "@shared/schema";
 import { z } from "zod";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
   const totalTapes = Object.values(config.tapeFormats as Record<string, number>).reduce((sum, qty) => sum + qty, 0);
@@ -144,6 +145,88 @@ export async function registerRoutes(
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+
+  // ============ STRIPE CHECKOUT ROUTES ============
+
+  app.get("/api/stripe/publishable-key", async (req: Request, res: Response) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      console.error("Get publishable key error:", error);
+      res.status(500).json({ error: "Failed to get Stripe publishable key" });
+    }
+  });
+
+  app.post("/api/stripe/create-checkout-session", async (req: Request, res: Response) => {
+    try {
+      const { orderId, orderConfig, shippingInfo, pricing } = req.body;
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      
+      const totalTapes = Object.values(orderConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
+      
+      const lineItems: any[] = [];
+      
+      if (totalTapes > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `VHS-to-Digital Conversion (${totalTapes} tapes)`,
+              description: `${orderConfig.estimatedHours} hours of footage`,
+            },
+            unit_amount: Math.round(pricing.subtotal * 100),
+          },
+          quantity: 1,
+        });
+      }
+      
+      if (pricing.rushFee > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Rush Processing Fee',
+              description: 'Priority 3-5 day processing',
+            },
+            unit_amount: Math.round(pricing.rushFee * 100),
+          },
+          quantity: 1,
+        });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: `${baseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/checkout?cancelled=true`,
+        customer_email: shippingInfo.email,
+        metadata: {
+          orderConfig: JSON.stringify(orderConfig),
+          shippingInfo: JSON.stringify(shippingInfo),
+        },
+      });
+
+      res.json({ url: session.url, sessionId: session.id });
+    } catch (error: any) {
+      console.error("Create checkout session error:", error);
+      res.status(500).json({ error: error.message || "Failed to create checkout session" });
+    }
+  });
+
+  app.get("/api/stripe/session/:sessionId", async (req: Request, res: Response) => {
+    try {
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+      res.json({ session });
+    } catch (error: any) {
+      console.error("Get session error:", error);
+      res.status(500).json({ error: error.message || "Failed to get session" });
     }
   });
 
