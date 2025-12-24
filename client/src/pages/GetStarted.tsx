@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,41 +35,29 @@ import {
   Edit2
 } from "lucide-react";
 import { PRICING, type TapeFormat, type OutputFormat, type TapeHandling, type ProcessingSpeed } from "@shared/schema";
+import { t } from "@/lib/translations";
 
-const STEPS = [
-  "Format",
-  "Quantity",
-  "Duration",
-  "Output",
-  "Handling",
-  "Speed",
-  "Review",
-];
+const STEPS = t.wizard.steps;
 
 const tapeFormatOptions: { id: TapeFormat; name: string; description: string; era: string; icon: typeof Video }[] = [
-  { id: "vhs", name: "VHS", description: "Standard VHS tapes (T-120, T-160)", era: "1980s-2000s", icon: Video },
-  { id: "vhsc", name: "VHS-C", description: "Compact VHS camcorder tapes", era: "1985-2000s", icon: Video },
-  { id: "hi8", name: "Hi8 / Video8", description: "Sony camcorder formats", era: "1985-2000s", icon: Disc },
-  { id: "minidv", name: "MiniDV", description: "Digital camcorder tapes", era: "1995-2010s", icon: Disc },
-  { id: "betamax", name: "Betamax", description: "Legacy Sony format", era: "1975-1988", icon: Video },
+  { id: "vhs", ...t.formats.vhs, icon: Video },
+  { id: "vhsc", ...t.formats.vhsc, icon: Video },
+  { id: "hi8", ...t.formats.hi8, icon: Disc },
+  { id: "minidv", ...t.formats.minidv, icon: Disc },
+  { id: "betamax", ...t.formats.betamax, icon: Video },
 ];
 
 const outputOptions: { id: OutputFormat; name: string; description: string; price: string; icon: typeof Download; included?: boolean }[] = [
-  { id: "mp4", name: "Digital Download (MP4)", description: "High-quality H.264 encoding, 30-day download access", price: "Included", icon: Download, included: true },
-  { id: "usb", name: "USB Flash Drive", description: "Pre-loaded and mailed to you", price: "+$15", icon: HardDrive },
-  { id: "dvd", name: "DVD Copies", description: "Chaptered for easy navigation", price: "+$8/disc", icon: Disc },
-  { id: "cloud", name: "Cloud Storage", description: "1 year secure access with shareable links", price: "+$10", icon: Cloud },
+  { id: "mp4", ...t.outputs.mp4, icon: Download, included: true },
+  { id: "usb", ...t.outputs.usb, icon: HardDrive },
+  { id: "dvd", ...t.outputs.dvd, icon: Disc },
+  { id: "cloud", ...t.outputs.cloud, icon: Cloud },
 ];
 
-const durationOptions = [
-  { label: "Less than 5 hours", value: 3 },
-  { label: "5-10 hours", value: 7 },
-  { label: "10-20 hours", value: 15 },
-  { label: "20-50 hours", value: 35 },
-  { label: "50+ hours", value: 60 },
-];
+const durationOptions = t.wizard.step3.durationOptions;
 
 export default function GetStarted() {
+  const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedFormats, setSelectedFormats] = useState<TapeFormat[]>([]);
   const [quantities, setQuantities] = useState<Record<TapeFormat, number>>({
@@ -139,19 +127,33 @@ export default function GetStarted() {
     );
   };
 
+  const handleCheckout = () => {
+    const config = {
+      tapeFormats: quantities,
+      totalTapes,
+      estimatedHours,
+      outputFormats,
+      dvdQuantity: outputFormats.includes("dvd") ? dvdQuantity : undefined,
+      tapeHandling,
+      processingSpeed,
+      specialInstructions: specialInstructions || undefined,
+      isGift,
+    };
+    setLocation(`/checkout?config=${encodeURIComponent(JSON.stringify(config))}`);
+  };
+
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="sticky top-0 z-40 bg-background border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4 mb-4">
             <h1 className="text-lg font-semibold text-foreground" data-testid="text-wizard-title">
-              Configure Your Order
+              {t.wizard.title}
             </h1>
             <Badge variant="secondary" data-testid="badge-step-indicator">
-              Step {currentStep + 1} of {STEPS.length}
+              {t.wizard.step} {currentStep + 1} {t.wizard.of} {STEPS.length}
             </Badge>
           </div>
           <Progress value={progress} className="h-2" data-testid="progress-wizard" />
@@ -170,17 +172,15 @@ export default function GetStarted() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Step 1: Format Selection */}
             {currentStep === 0 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-1-title">
-                    What type of tapes do you have?
+                    {t.wizard.step1.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Select all that apply. You can add quantities in the next step.
+                    {t.wizard.step1.subtitle}
                   </p>
                 </div>
 
@@ -225,12 +225,12 @@ export default function GetStarted() {
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" data-testid="button-format-help">
                       <HelpCircle className="w-4 h-4 mr-2" />
-                      Not sure which format you have?
+                      {t.wizard.step1.helpButton}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Tape Format Identification Guide</DialogTitle>
+                      <DialogTitle>{t.wizard.step1.helpTitle}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       {tapeFormatOptions.map((format) => (
@@ -239,7 +239,7 @@ export default function GetStarted() {
                           <div>
                             <h4 className="font-medium text-foreground">{format.name}</h4>
                             <p className="text-sm text-muted-foreground">{format.description}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Era: {format.era}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t.common.era}: {format.era}</p>
                           </div>
                         </div>
                       ))}
@@ -249,15 +249,14 @@ export default function GetStarted() {
               </div>
             )}
 
-            {/* Step 2: Quantity */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-2-title">
-                    How many tapes do you have?
+                    {t.wizard.step2.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Adjust the quantity for each format you selected.
+                    {t.wizard.step2.subtitle}
                   </p>
                 </div>
 
@@ -307,22 +306,21 @@ export default function GetStarted() {
 
                 <div className="p-4 bg-secondary/50 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Total tapes:</span>
+                    <span className="text-muted-foreground">{t.wizard.step2.totalTapes}</span>
                     <span className="text-xl font-bold text-foreground">{totalTapes}</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Step 3: Duration */}
             {currentStep === 2 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-3-title">
-                    Approximately how many hours of footage?
+                    {t.wizard.step3.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    This helps us provide an accurate estimate. We only charge for actual footage.
+                    {t.wizard.step3.subtitle}
                   </p>
                 </div>
 
@@ -331,12 +329,11 @@ export default function GetStarted() {
                     <div className="flex items-start gap-3">
                       <HelpCircle className="w-5 h-5 text-accent mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-foreground mb-1">How to estimate recording time</h4>
+                        <h4 className="font-medium text-foreground mb-1">{t.wizard.step3.helpTitle}</h4>
                         <ul className="text-sm text-muted-foreground space-y-1">
-                          <li>Check the tape label (T-120 = up to 2hrs in SP mode, 4hrs in LP, 6hrs in EP)</li>
-                          <li>Most home recordings used EP/LP mode for longer recording</li>
-                          <li>A typical full tape averages 2-4 hours</li>
-                          <li>When in doubt, estimate high — we only charge for actual footage</li>
+                          {t.wizard.step3.helpItems.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
                         </ul>
                       </div>
                     </div>
@@ -368,15 +365,14 @@ export default function GetStarted() {
               </div>
             )}
 
-            {/* Step 4: Output Format */}
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-4-title">
-                    How would you like to receive your files?
+                    {t.wizard.step4.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Digital download is included with every order. Select additional options if desired.
+                    {t.wizard.step4.subtitle}
                   </p>
                 </div>
 
@@ -405,7 +401,7 @@ export default function GetStarted() {
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold text-foreground">{option.name}</h3>
                               {option.included && (
-                                <Badge variant="secondary" className="text-xs">Required</Badge>
+                                <Badge variant="secondary" className="text-xs">{t.common.required}</Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">{option.description}</p>
@@ -426,7 +422,7 @@ export default function GetStarted() {
 
                 {outputFormats.includes("dvd") && (
                   <div className="p-4 bg-secondary/50 rounded-lg">
-                    <Label className="text-foreground mb-2 block">Number of DVD copies</Label>
+                    <Label className="text-foreground mb-2 block">{t.wizard.step4.dvdLabel}</Label>
                     <div className="flex items-center gap-3">
                       <Button
                         variant="outline"
@@ -451,15 +447,14 @@ export default function GetStarted() {
               </div>
             )}
 
-            {/* Step 5: Tape Handling */}
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-5-title">
-                    What should we do with your original tapes?
+                    {t.wizard.step5.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Choose whether to have your tapes returned or responsibly recycled.
+                    {t.wizard.step5.subtitle}
                   </p>
                 </div>
 
@@ -481,11 +476,11 @@ export default function GetStarted() {
                           tapeHandling === "return" ? "text-accent-foreground" : "text-muted-foreground"
                         }`} />
                       </div>
-                      <h3 className="font-semibold text-foreground mb-2">Return My Tapes</h3>
+                      <h3 className="font-semibold text-foreground mb-2">{t.wizard.step5.returnTitle}</h3>
                       <p className="text-sm text-muted-foreground mb-3">
-                        We'll safely package and mail back your originals
+                        {t.wizard.step5.returnDescription}
                       </p>
-                      <span className="font-medium text-foreground">+$5 shipping</span>
+                      <span className="font-medium text-foreground">{t.wizard.step5.returnPrice}</span>
                     </CardContent>
                   </Card>
 
@@ -506,30 +501,26 @@ export default function GetStarted() {
                           tapeHandling === "dispose" ? "text-accent-foreground" : "text-muted-foreground"
                         }`} />
                       </div>
-                      <h3 className="font-semibold text-foreground mb-2">Eco-Friendly Disposal</h3>
+                      <Badge variant="secondary" className="mb-2">{t.wizard.step5.disposeBadge}</Badge>
+                      <h3 className="font-semibold text-foreground mb-2">{t.wizard.step5.disposeTitle}</h3>
                       <p className="text-sm text-muted-foreground mb-3">
-                        We'll responsibly recycle the materials
+                        {t.wizard.step5.disposeDescription}
                       </p>
-                      <span className="font-medium text-accent">Free</span>
+                      <span className="font-medium text-accent">{t.wizard.step5.disposePrice}</span>
                     </CardContent>
                   </Card>
                 </div>
-
-                <p className="text-sm text-muted-foreground text-center">
-                  Many customers choose eco-friendly disposal once their memories are safely digital.
-                </p>
               </div>
             )}
 
-            {/* Step 6: Processing Speed */}
             {currentStep === 5 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-6-title">
-                    When do you need your files?
+                    {t.wizard.step6.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Choose your preferred turnaround time.
+                    {t.wizard.step6.subtitle}
                   </p>
                 </div>
 
@@ -551,10 +542,10 @@ export default function GetStarted() {
                           processingSpeed === "standard" ? "text-accent-foreground" : "text-muted-foreground"
                         }`} />
                       </div>
-                      <Badge variant="secondary" className="mb-2">Most Popular</Badge>
-                      <h3 className="font-semibold text-foreground mb-2">Standard Processing</h3>
-                      <p className="text-sm text-muted-foreground mb-3">2-3 weeks turnaround</p>
-                      <span className="font-medium text-accent">Included</span>
+                      <Badge variant="secondary" className="mb-2">{t.wizard.step6.standardBadge}</Badge>
+                      <h3 className="font-semibold text-foreground mb-2">{t.wizard.step6.standardTitle}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{t.wizard.step6.standardDescription}</p>
+                      <span className="font-medium text-accent">{t.common.included}</span>
                     </CardContent>
                   </Card>
 
@@ -575,36 +566,34 @@ export default function GetStarted() {
                           processingSpeed === "rush" ? "text-accent-foreground" : "text-muted-foreground"
                         }`} />
                       </div>
-                      <Badge className="bg-accent/20 text-accent mb-2">Priority</Badge>
-                      <h3 className="font-semibold text-foreground mb-2">Rush Processing</h3>
-                      <p className="text-sm text-muted-foreground mb-3">5 business days</p>
-                      <span className="font-medium text-foreground">+50% of order</span>
+                      <Badge className="bg-accent/20 text-accent mb-2">Priorita</Badge>
+                      <h3 className="font-semibold text-foreground mb-2">{t.wizard.step6.rushTitle}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{t.wizard.step6.rushDescription}</p>
+                      <span className="font-medium text-foreground">{t.wizard.step6.rushPrice}</span>
                     </CardContent>
                   </Card>
                 </div>
               </div>
             )}
 
-            {/* Step 7: Review */}
             {currentStep === 6 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground mb-2" data-testid="text-step-7-title">
-                    Review Your Order
+                    {t.wizard.step7.title}
                   </h2>
                   <p className="text-muted-foreground">
-                    Please review your selections before continuing to checkout.
+                    {t.wizard.step7.subtitle}
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  {/* Tapes Summary */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-foreground">Tapes</h3>
+                        <h3 className="font-semibold text-foreground">{t.wizard.sections.tapes}</h3>
                         <Button variant="ghost" size="sm" onClick={() => setCurrentStep(0)} data-testid="button-edit-tapes">
-                          <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          <Edit2 className="w-3 h-3 mr-1" /> {t.wizard.step7.editButton}
                         </Button>
                       </div>
                       <div className="space-y-2">
@@ -613,31 +602,30 @@ export default function GetStarted() {
                           return (
                             <div key={format} className="flex justify-between text-sm">
                               <span className="text-muted-foreground">{info.name}</span>
-                              <span className="text-foreground">{quantities[format]} tapes</span>
+                              <span className="text-foreground">{quantities[format]} {t.common.tapes}</span>
                             </div>
                           );
                         })}
                         <div className="flex justify-between text-sm font-medium pt-2 border-t">
-                          <span className="text-foreground">Total tapes</span>
+                          <span className="text-foreground">{t.wizard.step2.totalTapes}</span>
                           <span className="text-foreground">{totalTapes}</span>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Duration & Output */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-foreground">Output Options</h3>
+                        <h3 className="font-semibold text-foreground">{t.wizard.sections.output}</h3>
                         <Button variant="ghost" size="sm" onClick={() => setCurrentStep(3)} data-testid="button-edit-output">
-                          <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          <Edit2 className="w-3 h-3 mr-1" /> {t.wizard.step7.editButton}
                         </Button>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Estimated footage</span>
-                          <span className="text-foreground">{estimatedHours} hours</span>
+                          <span className="text-muted-foreground">{t.wizard.sections.duration}</span>
+                          <span className="text-foreground">{estimatedHours} {t.common.hours}</span>
                         </div>
                         {outputFormats.map((format) => {
                           const info = outputOptions.find(f => f.id === format)!;
@@ -652,41 +640,39 @@ export default function GetStarted() {
                     </CardContent>
                   </Card>
 
-                  {/* Processing */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-foreground">Processing</h3>
+                        <h3 className="font-semibold text-foreground">{t.wizard.sections.processing}</h3>
                         <Button variant="ghost" size="sm" onClick={() => setCurrentStep(5)} data-testid="button-edit-processing">
-                          <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          <Edit2 className="w-3 h-3 mr-1" /> {t.wizard.step7.editButton}
                         </Button>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Speed</span>
+                          <span className="text-muted-foreground">Velocita</span>
                           <span className="text-foreground">
-                            {processingSpeed === "rush" ? "Rush (5 days)" : "Standard (2-3 weeks)"}
+                            {processingSpeed === "rush" ? t.wizard.step6.rushTitle : t.wizard.step6.standardTitle}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Original tapes</span>
+                          <span className="text-muted-foreground">{t.wizard.sections.handling}</span>
                           <span className="text-foreground">
-                            {tapeHandling === "return" ? "Return to me" : "Eco-friendly disposal"}
+                            {tapeHandling === "return" ? t.wizard.step5.returnTitle : t.wizard.step5.disposeTitle}
                           </span>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Special Instructions */}
                   <Card>
                     <CardContent className="p-4">
                       <Label htmlFor="instructions" className="font-semibold text-foreground mb-2 block">
-                        Special Instructions (Optional)
+                        {t.wizard.step7.specialInstructions}
                       </Label>
                       <Textarea
                         id="instructions"
-                        placeholder="E.g., Handle with care - wedding footage"
+                        placeholder={t.wizard.step7.specialPlaceholder}
                         value={specialInstructions}
                         onChange={(e) => setSpecialInstructions(e.target.value)}
                         className="resize-none"
@@ -701,7 +687,7 @@ export default function GetStarted() {
                           data-testid="checkbox-gift"
                         />
                         <Label htmlFor="gift" className="text-sm text-muted-foreground">
-                          This is a gift (ships to different address, no pricing shown)
+                          {t.wizard.step7.giftLabel} - {t.wizard.step7.giftDescription}
                         </Label>
                       </div>
                     </CardContent>
@@ -710,7 +696,6 @@ export default function GetStarted() {
               </div>
             )}
 
-            {/* Navigation */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t">
               <Button
                 variant="outline"
@@ -719,7 +704,7 @@ export default function GetStarted() {
                 data-testid="button-back"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {t.wizard.summary.backButton}
               </Button>
 
               {currentStep < STEPS.length - 1 ? (
@@ -727,123 +712,91 @@ export default function GetStarted() {
                   onClick={() => setCurrentStep(currentStep + 1)}
                   disabled={!canProceed}
                   className="bg-accent text-accent-foreground"
-                  data-testid="button-continue"
+                  data-testid="button-next"
                 >
-                  Continue
+                  {t.wizard.summary.continueButton}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
-                <Button 
-                  className="bg-accent text-accent-foreground" 
+                <Button
+                  onClick={handleCheckout}
+                  className="bg-accent text-accent-foreground"
                   data-testid="button-checkout"
-                  onClick={() => {
-                    const orderConfig = {
-                      tapeFormats: quantities,
-                      totalTapes,
-                      estimatedHours,
-                      outputFormats,
-                      dvdQuantity: outputFormats.includes("dvd") ? dvdQuantity : 0,
-                      tapeHandling,
-                      processingSpeed,
-                      specialInstructions,
-                      isGift,
-                    };
-                    localStorage.setItem("orderConfig", JSON.stringify(orderConfig));
-                    window.location.href = "/checkout";
-                  }}
                 >
-                  Continue to Checkout
+                  {t.wizard.summary.checkoutButton}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}
             </div>
           </div>
 
-          {/* Price Summary Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-32">
-              <Card data-testid="card-price-summary">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4">Order Summary</h3>
-                  
-                  <div className="space-y-3 text-sm">
-                    {totalTapes > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Base ({totalTapes} tapes)</span>
-                        <span className="text-foreground">${pricing.basePrice}</span>
-                      </div>
-                    )}
-                    {estimatedHours > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Footage ({estimatedHours} hrs)</span>
-                        <span className="text-foreground">${pricing.hourlyPrice}</span>
-                      </div>
-                    )}
-                    {pricing.usbPrice > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">USB Drive</span>
-                        <span className="text-foreground">${pricing.usbPrice}</span>
-                      </div>
-                    )}
-                    {pricing.dvdPrice > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">DVDs ({dvdQuantity})</span>
-                        <span className="text-foreground">${pricing.dvdPrice}</span>
-                      </div>
-                    )}
-                    {pricing.cloudPrice > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cloud Storage</span>
-                        <span className="text-foreground">${pricing.cloudPrice}</span>
-                      </div>
-                    )}
-                    {pricing.returnPrice > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Return Shipping</span>
-                        <span className="text-foreground">${pricing.returnPrice}</span>
-                      </div>
-                    )}
-
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span className="text-foreground">${pricing.subtotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {pricing.rushFee > 0 && (
-                      <div className="flex justify-between text-accent">
-                        <span>Rush Processing</span>
-                        <span>+${pricing.rushFee.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between">
-                        <span className="font-semibold text-foreground">Estimated Total</span>
-                        <span className="text-xl font-bold text-accent">${pricing.total.toFixed(2)}</span>
-                      </div>
-                    </div>
+            <Card className="sticky top-24">
+              <CardContent className="p-6">
+                <h3 className="font-semibold text-foreground mb-4">{t.wizard.summary.title}</h3>
+                
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.wizard.summary.baseCost} ({totalTapes} {t.wizard.summary.tapes})</span>
+                    <span className="text-foreground">{pricing.basePrice.toFixed(2)} EUR</span>
                   </div>
-
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Final price confirmed after tape inspection. We only charge for actual footage.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <div className="mt-4 p-4 bg-secondary/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-accent mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-foreground text-sm">Satisfaction Guaranteed</h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Not happy? We'll make it right or refund your money.
-                    </p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.wizard.summary.footage} ({estimatedHours} {t.wizard.summary.hours})</span>
+                    <span className="text-foreground">{pricing.hourlyPrice.toFixed(2)} EUR</span>
                   </div>
+                  {pricing.usbPrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t.wizard.summary.usbDrive}</span>
+                      <span className="text-foreground">{pricing.usbPrice.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                  {pricing.dvdPrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t.wizard.summary.dvdCopies} ({dvdQuantity} {t.wizard.summary.discs})</span>
+                      <span className="text-foreground">{pricing.dvdPrice.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                  {pricing.cloudPrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t.wizard.summary.cloudStorage}</span>
+                      <span className="text-foreground">{pricing.cloudPrice.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                  {pricing.returnPrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t.wizard.summary.returnShipping}</span>
+                      <span className="text-foreground">{pricing.returnPrice.toFixed(2)} EUR</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+
+                <div className="border-t my-4" />
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.wizard.summary.subtotal}</span>
+                    <span className="text-foreground">{pricing.subtotal.toFixed(2)} EUR</span>
+                  </div>
+                  {pricing.rushFee > 0 && (
+                    <div className="flex justify-between text-amber-600">
+                      <span>{t.wizard.summary.rushFee} (+50%)</span>
+                      <span>{pricing.rushFee.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t my-4" />
+
+                <div className="flex justify-between font-semibold text-lg">
+                  <span className="text-foreground">{t.wizard.summary.estimatedTotal}</span>
+                  <span className="text-accent">{pricing.total.toFixed(2)} EUR</span>
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-4 text-center">
+                  Prezzo finale calcolato dopo l'ispezione delle cassette
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Film, Mail, Phone, MapPin } from "lucide-react";
+import { t } from "@/lib/translations";
 
 export function Footer() {
   return (
@@ -16,82 +17,82 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm opacity-80 leading-relaxed">
-              Preserving your precious memories by converting VHS tapes to high-quality digital formats.
+              {t.footer.description}
             </p>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Quick Links</h3>
+            <h3 className="font-semibold text-lg">{t.footer.quickLinks}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-home">
-                  Home
+                  {t.nav.home}
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-pricing">
-                  Pricing
+                  {t.nav.pricing}
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-about">
-                  About Us
+                  {t.nav.about}
                 </Link>
               </li>
               <li>
                 <Link href="/get-started" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-get-started">
-                  Get Started
+                  {t.nav.getStarted}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Support</h3>
+            <h3 className="font-semibold text-lg">{t.footer.support}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/dashboard" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-dashboard">
-                  My Orders
+                  {t.footer.myOrders}
                 </Link>
               </li>
               <li>
                 <a href="#faq" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-faq">
-                  FAQ
+                  {t.footer.faq}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-privacy">
-                  Privacy Policy
+                  {t.footer.privacy}
                 </a>
               </li>
               <li>
                 <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-terms">
-                  Terms of Service
+                  {t.footer.terms}
                 </a>
               </li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Contact Us</h3>
+            <h3 className="font-semibold text-lg">{t.footer.contactUs}</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 opacity-80" />
-                <a href="mailto:hello@reelrevive.com" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-email">
-                  hello@reelrevive.com
+                <a href="mailto:info@reelrevive.it" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-email">
+                  info@reelrevive.it
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 opacity-80" />
-                <a href="tel:+18005551234" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-phone">
-                  1-800-555-1234
+                <a href="tel:+390212345678" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-phone">
+                  +39 02 1234 5678
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 opacity-80 mt-0.5" />
                 <span className="text-sm opacity-80" data-testid="text-footer-address">
-                  123 Memory Lane<br />
-                  San Francisco, CA 94102
+                  Via dei Ricordi 123<br />
+                  Milano, MI 20121
                 </span>
               </li>
             </ul>
@@ -100,7 +101,7 @@ export function Footer() {
 
         <div className="border-t border-primary-foreground/20 mt-12 pt-8">
           <p className="text-sm text-center opacity-70" data-testid="text-footer-copyright">
-            2024 ReelRevive. All rights reserved. Your memories, digitized with care.
+            {t.footer.copyright}
           </p>
         </div>
       </div>

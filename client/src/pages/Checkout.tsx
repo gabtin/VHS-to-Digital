@@ -21,15 +21,16 @@ import { ArrowLeft, Loader2, Package, CheckCircle2 } from "lucide-react";
 import { PRICING, type TapeFormat, type OutputFormat, type TapeHandling, type ProcessingSpeed } from "@shared/schema";
 import { useMemo, useEffect, useState } from "react";
 import { Link } from "wouter";
+import { t } from "@/lib/translations";
 
 const shippingFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required"),
-  shippingName: z.string().min(1, "Shipping name is required"),
-  shippingAddress: z.string().min(1, "Address is required"),
-  shippingCity: z.string().min(1, "City is required"),
-  shippingState: z.string().min(1, "State is required"),
-  shippingZip: z.string().min(5, "Valid ZIP code is required"),
+  name: z.string().min(1, "Nome obbligatorio"),
+  email: z.string().email("Email valida obbligatoria"),
+  shippingName: z.string().min(1, "Nome destinatario obbligatorio"),
+  shippingAddress: z.string().min(1, "Indirizzo obbligatorio"),
+  shippingCity: z.string().min(1, "Citta obbligatoria"),
+  shippingState: z.string().min(2, "Provincia obbligatoria"),
+  shippingZip: z.string().min(5, "CAP valido obbligatorio"),
   shippingPhone: z.string().optional(),
 });
 
@@ -58,21 +59,6 @@ interface OrderPricing {
   rushFee: number;
   total: number;
 }
-
-const tapeFormatLabels: Record<TapeFormat, string> = {
-  vhs: "VHS",
-  vhsc: "VHS-C",
-  hi8: "Hi8 / Video8",
-  minidv: "MiniDV",
-  betamax: "Betamax",
-};
-
-const outputFormatLabels: Record<OutputFormat, string> = {
-  mp4: "Digital Download (MP4)",
-  usb: "USB Flash Drive",
-  dvd: "DVD Copies",
-  cloud: "Cloud Storage",
-};
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
@@ -135,7 +121,7 @@ export default function Checkout() {
 
   const createCheckoutMutation = useMutation({
     mutationFn: async (data: ShippingFormValues) => {
-      if (!orderConfig || !pricing) throw new Error("Order configuration not found");
+      if (!orderConfig || !pricing) throw new Error("Configurazione ordine non trovata");
       
       const response = await apiRequest("POST", "/api/stripe/create-checkout-session", {
         orderConfig,
@@ -153,16 +139,16 @@ export default function Checkout() {
         window.location.href = data.url;
       } else {
         toast({
-          title: "Error",
-          description: "Failed to create checkout session",
+          title: "Errore",
+          description: "Impossibile creare la sessione di pagamento",
           variant: "destructive",
         });
       }
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to start checkout. Please try again.",
+        title: "Errore",
+        description: error.message || "Impossibile avviare il pagamento. Riprova.",
         variant: "destructive",
       });
     },
@@ -178,13 +164,13 @@ export default function Checkout() {
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
             <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Order Found</h2>
+            <h2 className="text-xl font-semibold mb-2">Nessun Ordine Trovato</h2>
             <p className="text-muted-foreground mb-6">
-              It looks like you haven't configured your order yet.
+              Sembra che tu non abbia ancora configurato il tuo ordine.
             </p>
             <Link href="/get-started">
               <Button data-testid="button-start-order">
-                Start Your Order
+                {t.nav.getStarted}
               </Button>
             </Link>
           </CardContent>
@@ -200,20 +186,20 @@ export default function Checkout() {
           <Link href="/get-started">
             <Button variant="ghost" size="sm" data-testid="button-back">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Configuration
+              {t.common.back}
             </Button>
           </Link>
         </div>
 
         <h1 className="text-3xl font-bold text-foreground mb-8" data-testid="text-checkout-title">
-          Checkout
+          {t.checkout.title}
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Shipping Information</CardTitle>
+                <CardTitle>{t.checkout.shippingTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -224,10 +210,10 @@ export default function Checkout() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name</FormLabel>
+                            <FormLabel>{t.checkout.fields.name}</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="John Doe" 
+                                placeholder="Mario Rossi" 
                                 {...field} 
                                 data-testid="input-name"
                               />
@@ -246,7 +232,7 @@ export default function Checkout() {
                             <FormControl>
                               <Input 
                                 type="email" 
-                                placeholder="john@example.com" 
+                                placeholder="mario@esempio.it" 
                                 {...field} 
                                 data-testid="input-email"
                               />
@@ -264,10 +250,10 @@ export default function Checkout() {
                       name="shippingName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Recipient Name</FormLabel>
+                          <FormLabel>Nome Destinatario</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="Name on shipping label" 
+                              placeholder="Nome sull'etichetta di spedizione" 
                               {...field} 
                               data-testid="input-shipping-name"
                             />
@@ -282,10 +268,10 @@ export default function Checkout() {
                       name="shippingAddress"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Street Address</FormLabel>
+                          <FormLabel>{t.checkout.fields.address}</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="123 Main St" 
+                              placeholder="Via Roma 123" 
                               {...field} 
                               data-testid="input-address"
                             />
@@ -301,10 +287,10 @@ export default function Checkout() {
                         name="shippingCity"
                         render={({ field }) => (
                           <FormItem className="col-span-2 md:col-span-2">
-                            <FormLabel>City</FormLabel>
+                            <FormLabel>{t.checkout.fields.city}</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="City" 
+                                placeholder="Milano" 
                                 {...field} 
                                 data-testid="input-city"
                               />
@@ -319,10 +305,10 @@ export default function Checkout() {
                         name="shippingState"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>State</FormLabel>
+                            <FormLabel>{t.checkout.fields.province}</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="CA" 
+                                placeholder="MI" 
                                 {...field} 
                                 data-testid="input-state"
                               />
@@ -337,10 +323,10 @@ export default function Checkout() {
                         name="shippingZip"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>ZIP Code</FormLabel>
+                            <FormLabel>{t.checkout.fields.postalCode}</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="12345" 
+                                placeholder="20121" 
                                 {...field} 
                                 data-testid="input-zip"
                               />
@@ -356,11 +342,11 @@ export default function Checkout() {
                       name="shippingPhone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone (Optional)</FormLabel>
+                          <FormLabel>{t.checkout.fields.phone}</FormLabel>
                           <FormControl>
                             <Input 
                               type="tel" 
-                              placeholder="(555) 123-4567" 
+                              placeholder="+39 02 1234 5678" 
                               {...field} 
                               data-testid="input-phone"
                             />
@@ -380,15 +366,19 @@ export default function Checkout() {
                       {createCheckoutMutation.isPending ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Redirecting to payment...
+                          Reindirizzamento al pagamento...
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Pay ${pricing.total.toFixed(2)}
+                          {t.checkout.payButton} - {pricing.total.toFixed(2)} EUR
                         </>
                       )}
                     </Button>
+                    
+                    <p className="text-xs text-center text-muted-foreground">
+                      {t.checkout.securePayment}
+                    </p>
                   </form>
                 </Form>
               </CardContent>
@@ -398,21 +388,21 @@ export default function Checkout() {
           <div className="lg:col-span-1">
             <Card className="sticky top-4">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>{t.checkout.paymentTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Tapes</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">{t.wizard.sections.tapes}</h4>
                   {Object.entries(orderConfig.tapeFormats)
                     .filter(([, qty]) => qty > 0)
                     .map(([format, qty]) => (
                       <div key={format} className="flex justify-between text-sm" data-testid={`text-tape-${format}`}>
-                        <span>{tapeFormatLabels[format as TapeFormat]}</span>
+                        <span>{t.formats[format as TapeFormat].name}</span>
                         <span>x{qty}</span>
                       </div>
                     ))}
                   <div className="flex justify-between text-sm font-medium mt-1">
-                    <span>Total Tapes</span>
+                    <span>{t.wizard.step2.totalTapes}</span>
                     <span data-testid="text-total-tapes">{orderConfig.totalTapes}</span>
                   </div>
                 </div>
@@ -420,10 +410,10 @@ export default function Checkout() {
                 <Separator />
 
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Output Formats</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">{t.wizard.sections.output}</h4>
                   {orderConfig.outputFormats.map((format) => (
                     <div key={format} className="text-sm" data-testid={`text-output-${format}`}>
-                      {outputFormatLabels[format]}
+                      {t.outputs[format].name}
                       {format === "dvd" && orderConfig.dvdQuantity && ` (x${orderConfig.dvdQuantity})`}
                     </div>
                   ))}
@@ -432,15 +422,15 @@ export default function Checkout() {
                 <Separator />
 
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Options</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Opzioni</h4>
                   <div className="text-sm">
-                    <span className="capitalize">{orderConfig.processingSpeed}</span> Processing
+                    {orderConfig.processingSpeed === "rush" ? t.wizard.step6.rushTitle : t.wizard.step6.standardTitle}
                   </div>
                   <div className="text-sm">
-                    {orderConfig.tapeHandling === "return" ? "Return Tapes" : "Dispose of Tapes"}
+                    {orderConfig.tapeHandling === "return" ? t.wizard.step5.returnTitle : t.wizard.step5.disposeTitle}
                   </div>
                   <div className="text-sm">
-                    Est. {orderConfig.estimatedHours} hours of footage
+                    Stima {orderConfig.estimatedHours} ore di filmato
                   </div>
                 </div>
 
@@ -448,41 +438,41 @@ export default function Checkout() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Base Price ({orderConfig.totalTapes} tapes)</span>
-                    <span data-testid="text-base-price">${pricing.basePrice.toFixed(2)}</span>
+                    <span>{t.wizard.summary.baseCost} ({orderConfig.totalTapes} {t.wizard.summary.tapes})</span>
+                    <span data-testid="text-base-price">{pricing.basePrice.toFixed(2)} EUR</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Footage ({orderConfig.estimatedHours} hrs)</span>
-                    <span>${pricing.hourlyPrice.toFixed(2)}</span>
+                    <span>{t.wizard.summary.footage} ({orderConfig.estimatedHours} {t.wizard.summary.hours})</span>
+                    <span>{pricing.hourlyPrice.toFixed(2)} EUR</span>
                   </div>
                   {pricing.usbPrice > 0 && (
                     <div className="flex justify-between">
-                      <span>USB Drive</span>
-                      <span>${pricing.usbPrice.toFixed(2)}</span>
+                      <span>{t.wizard.summary.usbDrive}</span>
+                      <span>{pricing.usbPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
                   {pricing.dvdPrice > 0 && (
                     <div className="flex justify-between">
-                      <span>DVD Copies</span>
-                      <span>${pricing.dvdPrice.toFixed(2)}</span>
+                      <span>{t.wizard.summary.dvdCopies}</span>
+                      <span>{pricing.dvdPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
                   {pricing.cloudPrice > 0 && (
                     <div className="flex justify-between">
-                      <span>Cloud Storage</span>
-                      <span>${pricing.cloudPrice.toFixed(2)}</span>
+                      <span>{t.wizard.summary.cloudStorage}</span>
+                      <span>{pricing.cloudPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
                   {pricing.returnPrice > 0 && (
                     <div className="flex justify-between">
-                      <span>Return Shipping</span>
-                      <span>${pricing.returnPrice.toFixed(2)}</span>
+                      <span>{t.wizard.summary.returnShipping}</span>
+                      <span>{pricing.returnPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
                   {pricing.rushFee > 0 && (
                     <div className="flex justify-between text-amber-600">
-                      <span>Rush Fee (50%)</span>
-                      <span>${pricing.rushFee.toFixed(2)}</span>
+                      <span>{t.wizard.summary.rushFee} (50%)</span>
+                      <span>{pricing.rushFee.toFixed(2)} EUR</span>
                     </div>
                   )}
                 </div>
@@ -490,8 +480,8 @@ export default function Checkout() {
                 <Separator />
 
                 <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span data-testid="text-total-price">${pricing.total.toFixed(2)}</span>
+                  <span>Totale</span>
+                  <span data-testid="text-total-price">{pricing.total.toFixed(2)} EUR</span>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
@@ -12,113 +12,40 @@ import {
   Package,
   Zap
 } from "lucide-react";
+import { t } from "@/lib/translations";
 
 const tapeFormats = [
-  {
-    id: "vhs",
-    name: "VHS",
-    description: "Standard VHS tapes (T-120, T-160, etc.)",
-    era: "1980s - 2000s",
-    icon: Video,
-    popular: true,
-  },
-  {
-    id: "vhsc",
-    name: "VHS-C",
-    description: "Compact VHS camcorder tapes",
-    era: "1985 - 2000s",
-    icon: Video,
-    popular: false,
-  },
-  {
-    id: "hi8",
-    name: "Hi8 / Video8",
-    description: "Sony camcorder formats",
-    era: "1985 - 2000s",
-    icon: Disc,
-    popular: true,
-  },
-  {
-    id: "minidv",
-    name: "MiniDV",
-    description: "Digital camcorder tapes",
-    era: "1995 - 2010s",
-    icon: Disc,
-    popular: false,
-  },
-  {
-    id: "betamax",
-    name: "Betamax",
-    description: "Legacy Sony format",
-    era: "1975 - 1988",
-    icon: Video,
-    popular: false,
-  },
+  { id: "vhs", ...t.formats.vhs, icon: Video, popular: true },
+  { id: "vhsc", ...t.formats.vhsc, icon: Video, popular: false },
+  { id: "hi8", ...t.formats.hi8, icon: Disc, popular: true },
+  { id: "minidv", ...t.formats.minidv, icon: Disc, popular: false },
+  { id: "betamax", ...t.formats.betamax, icon: Video, popular: false },
 ];
 
-const pricingTable = [
-  { service: "Base digitization (per tape)", price: "$25", included: false },
-  { service: "Per hour of footage", price: "$10", included: false },
-  { service: "Output: MP4 download", price: "Included", included: true },
-  { service: "Output: USB drive", price: "+$15", included: false },
-  { service: "Output: DVD (per disc)", price: "+$8", included: false },
-  { service: "Output: Cloud storage (1 year)", price: "+$10", included: false },
-  { service: "Return original tapes", price: "+$5 shipping", included: false },
-  { service: "Eco-friendly disposal", price: "Free", included: true },
-  { service: "Rush processing (5 days)", price: "+50%", included: false },
-];
-
-const addOns = [
-  {
-    icon: HardDrive,
-    title: "USB Flash Drive",
-    description: "Pre-loaded with your digital files, ready to plug and play",
-    price: "$15",
-  },
-  {
-    icon: Disc,
-    title: "DVD Copies",
-    description: "Professionally burned with chapter markers for easy navigation",
-    price: "$8/disc",
-  },
-  {
-    icon: Cloud,
-    title: "Cloud Storage",
-    description: "1 year of secure cloud access with shareable family links",
-    price: "$10",
-  },
-  {
-    icon: Zap,
-    title: "Rush Processing",
-    description: "Get your files in 5 business days instead of 2-3 weeks",
-    price: "+50%",
-  },
-];
+const addOnIcons = [HardDrive, Disc, Cloud, Zap];
 
 export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
       <section className="py-16 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-primary-foreground mb-4" data-testid="text-pricing-hero-title">
-            Simple, Transparent Pricing
+            {t.pricing.heroTitle}
           </h1>
           <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            No hidden fees. No surprises. Just honest pricing for preserving your memories.
+            {t.pricing.heroSubtitle}
           </p>
         </div>
       </section>
 
-      {/* Supported Formats */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4" data-testid="text-formats-title">
-              Supported Tape Formats
+              {t.pricing.formatsTitle}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We convert all major analog tape formats to high-quality digital files
+              {t.pricing.formatsSubtitle}
             </p>
           </div>
 
@@ -132,7 +59,7 @@ export default function Pricing() {
                 <CardContent className="p-6 text-center">
                   {format.popular && (
                     <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground text-xs">
-                      Popular
+                      {t.common.popular}
                     </Badge>
                   )}
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary flex items-center justify-center">
@@ -148,15 +75,14 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Pricing Table */}
       <section className="py-16 bg-card">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4" data-testid="text-pricing-table-title">
-              Pricing Breakdown
+              {t.pricing.tableTitle}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Clear pricing you can count on
+              {t.pricing.tableSubtitle}
             </p>
           </div>
 
@@ -166,12 +92,12 @@ export default function Pricing() {
                 <table className="w-full">
                   <thead className="bg-secondary">
                     <tr>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Service</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Price</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.pricing.service}</th>
+                      <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">{t.pricing.price}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {pricingTable.map((row, i) => (
+                    {t.pricingTable.map((row, i) => (
                       <tr key={i} className="bg-background" data-testid={`row-pricing-${i}`}>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
@@ -196,11 +122,11 @@ export default function Pricing() {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground mb-4">
-              * Final price confirmed after tape inspection. We only charge for actual recorded footage.
+              * Prezzo finale confermato dopo ispezione cassetta. Addebitiamo solo per il filmato effettivamente registrato.
             </p>
             <Link href="/get-started">
               <Button className="bg-accent text-accent-foreground" data-testid="button-get-quote">
-                Get Your Free Quote
+                {t.pricing.getQuote}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
@@ -208,65 +134,65 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Add-ons */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4" data-testid="text-addons-title">
-              Popular Add-ons
+              {t.pricing.addonsTitle}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Enhance your order with these optional extras
+              {t.pricing.addonsSubtitle}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {addOns.map((addon, i) => (
-              <Card key={i} className="hover-elevate" data-testid={`card-addon-${i}`}>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <addon.icon className="w-6 h-6 text-accent" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">{addon.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{addon.description}</p>
-                  <div className="text-lg font-bold text-accent">{addon.price}</div>
-                </CardContent>
-              </Card>
-            ))}
+            {t.addons.map((addon, i) => {
+              const Icon = addOnIcons[i];
+              return (
+                <Card key={i} className="hover-elevate" data-testid={`card-addon-${i}`}>
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-2">{addon.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{addon.description}</p>
+                    <div className="text-lg font-bold text-accent">{addon.price}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Bulk Discount */}
       <section className="py-16 bg-accent">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Package className="w-12 h-12 mx-auto mb-4 text-accent-foreground" />
           <h2 className="text-2xl sm:text-3xl font-bold text-accent-foreground mb-4" data-testid="text-bulk-title">
-            Converting 10+ Tapes?
+            {t.pricing.bulkTitle}
           </h2>
           <p className="text-lg text-accent-foreground/80 mb-6 max-w-xl mx-auto">
-            Contact us for special volume pricing. We offer significant discounts for larger collections.
+            {t.pricing.bulkSubtitle}
           </p>
-          <a href="mailto:hello@reelrevive.com">
+          <a href="mailto:info@reelrevive.it">
             <Button variant="outline" size="lg" className="border-accent-foreground/30 text-accent-foreground bg-accent-foreground/10" data-testid="button-contact-bulk">
-              Contact for Volume Pricing
+              {t.pricing.bulkButton}
             </Button>
           </a>
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-16 bg-primary">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-primary-foreground mb-4" data-testid="text-pricing-cta-title">
-            Ready to Get Started?
+            {t.pricing.ctaTitle}
           </h2>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-            Use our order configurator to see exactly what your project will cost.
+            {t.pricing.ctaSubtitle}
           </p>
           <Link href="/get-started">
             <Button size="lg" className="bg-accent text-accent-foreground text-base px-10" data-testid="button-pricing-final-cta">
-              Start Your Order
+              {t.pricing.ctaButton}
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </Link>

@@ -4,7 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Loader2, Package, ArrowRight, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Package, ArrowRight, AlertCircle, FileText } from "lucide-react";
+import { t } from "@/lib/translations";
 
 interface OrderResult {
   id: string;
@@ -24,7 +25,7 @@ export default function PaymentSuccess() {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to verify payment");
+        throw new Error(error.error || "Impossibile verificare il pagamento");
       }
       
       return await response.json();
@@ -34,7 +35,7 @@ export default function PaymentSuccess() {
       localStorage.removeItem("orderConfig");
     },
     onError: (err: any) => {
-      setError(err.message || "Failed to create order");
+      setError(err.message || "Impossibile creare l'ordine");
     },
   });
 
@@ -54,10 +55,10 @@ export default function PaymentSuccess() {
           <CardContent className="py-16 text-center">
             <Loader2 className="w-16 h-16 mx-auto mb-6 animate-spin text-accent" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              Processing Your Order
+              Elaborazione Ordine
             </h2>
             <p className="text-muted-foreground">
-              Please wait while we confirm your payment...
+              Attendere la conferma del pagamento...
             </p>
           </CardContent>
         </Card>
@@ -74,14 +75,14 @@ export default function PaymentSuccess() {
               <AlertCircle className="w-8 h-8 text-destructive" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              Something Went Wrong
+              Qualcosa e Andato Storto
             </h2>
             <p className="text-muted-foreground mb-6">
               {error}
             </p>
             <Link href="/checkout">
               <Button className="bg-accent text-accent-foreground" data-testid="button-try-again">
-                Try Again
+                {t.common.retry}
               </Button>
             </Link>
           </CardContent>
@@ -96,11 +97,11 @@ export default function PaymentSuccess() {
         <Card className="max-w-md mx-auto">
           <CardContent className="py-16 text-center">
             <p className="text-muted-foreground">
-              No payment session found. Please start a new order.
+              Nessuna sessione di pagamento trovata. Inizia un nuovo ordine.
             </p>
             <Link href="/get-started">
               <Button className="mt-4 bg-accent text-accent-foreground">
-                Start New Order
+                {t.nav.getStarted}
               </Button>
             </Link>
           </CardContent>
@@ -118,14 +119,14 @@ export default function PaymentSuccess() {
           </div>
           
           <h1 className="text-2xl font-bold text-foreground mb-2" data-testid="text-success-title">
-            Payment Successful!
+            {t.paymentSuccess.title}
           </h1>
           <p className="text-muted-foreground mb-6">
-            Thank you for your order. We've received your payment.
+            {t.paymentSuccess.subtitle}
           </p>
           
           <div className="bg-secondary/50 rounded-lg p-4 mb-8">
-            <p className="text-sm text-muted-foreground mb-1">Order Number</p>
+            <p className="text-sm text-muted-foreground mb-1">{t.paymentSuccess.orderNumber}</p>
             <p className="text-2xl font-mono font-bold text-foreground" data-testid="text-order-number">
               {orderResult.orderNumber}
             </p>
@@ -134,38 +135,28 @@ export default function PaymentSuccess() {
           <div className="bg-card border rounded-lg p-4 mb-8 text-left">
             <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
               <Package className="w-4 h-4" />
-              What's Next?
+              {t.paymentSuccess.nextSteps}
             </h3>
             <ol className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">1.</span>
-                Check your email for shipping instructions
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">2.</span>
-                Pack your tapes securely and ship them to us
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">3.</span>
-                We'll notify you when we receive your tapes
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-foreground">4.</span>
-                Your digital files will be ready in 7-10 business days
-              </li>
+              {t.paymentSuccess.steps.map((step, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="font-semibold text-foreground">{i + 1}.</span>
+                  {step}
+                </li>
+              ))}
             </ol>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={`/order/${orderResult.id}`}>
-              <Button className="bg-accent text-accent-foreground" data-testid="button-track-order">
-                Track Your Order
-                <ArrowRight className="w-4 h-4 ml-2" />
+            <Link href={`/order/${orderResult.orderNumber}/label`}>
+              <Button className="bg-accent text-accent-foreground" data-testid="button-view-label">
+                <FileText className="w-4 h-4 mr-2" />
+                {t.shippingLabel.viewButton}
               </Button>
             </Link>
-            <Link href="/">
-              <Button variant="outline" data-testid="button-return-home">
-                Return to Home
+            <Link href="/dashboard">
+              <Button variant="outline" data-testid="button-dashboard">
+                {t.paymentSuccess.dashboardButton}
               </Button>
             </Link>
           </div>

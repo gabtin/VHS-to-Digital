@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { t } from "@/lib/translations";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -20,10 +21,10 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/pricing", label: "Pricing" },
-    { href: "/about", label: "About" },
-    { href: "/get-started", label: "Get Started" },
+    { href: "/", label: t.nav.home },
+    { href: "/pricing", label: t.nav.pricing },
+    { href: "/about", label: t.nav.about },
+    { href: "/get-started", label: t.nav.getStarted },
   ];
 
   const isActive = (path: string) => {
@@ -52,7 +53,7 @@ export function Navbar() {
     if (user?.name) {
       return user.name.split(" ")[0];
     }
-    return user?.email?.split("@")[0] || "User";
+    return user?.email?.split("@")[0] || "Utente";
   };
 
   return (
@@ -117,20 +118,20 @@ export function Navbar() {
                     <Link href="/dashboard">
                       <DropdownMenuItem data-testid="link-dashboard">
                         <User className="w-4 h-4 mr-2" />
-                        Dashboard
+                        {t.nav.dashboard}
                       </DropdownMenuItem>
                     </Link>
                     {user.isAdmin && (
                       <Link href="/admin">
                         <DropdownMenuItem data-testid="link-admin">
-                          Admin Panel
+                          {t.nav.adminPanel}
                         </DropdownMenuItem>
                       </Link>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => logout()} data-testid="button-logout">
                       <LogOut className="w-4 h-4 mr-2" />
-                      Log Out
+                      {t.nav.logout}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -138,12 +139,12 @@ export function Navbar() {
                 <>
                   <a href="/api/login">
                     <Button variant="outline" size="sm" data-testid="button-login">
-                      Log In
+                      {t.nav.login}
                     </Button>
                   </a>
                   <Link href="/get-started">
                     <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
-                      Start Order
+                      {t.nav.startOrder}
                     </Button>
                   </Link>
                 </>
@@ -190,31 +191,31 @@ export function Navbar() {
                     </div>
                     <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full" data-testid="link-mobile-dashboard">
-                        Dashboard
+                        {t.nav.dashboard}
                       </Button>
                     </Link>
                     {user.isAdmin && (
                       <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
                         <Button variant="outline" className="w-full" data-testid="link-mobile-admin">
-                          Admin Panel
+                          {t.nav.adminPanel}
                         </Button>
                       </Link>
                     )}
                     <Button variant="ghost" className="w-full justify-start" onClick={() => logout()} data-testid="button-mobile-logout">
                       <LogOut className="w-4 h-4 mr-2" />
-                      Log Out
+                      {t.nav.logout}
                     </Button>
                   </>
                 ) : (
                   <>
                     <a href="/api/login" onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full" data-testid="button-mobile-login">
-                        Log In
+                        {t.nav.login}
                       </Button>
                     </a>
                     <Link href="/get-started" onClick={() => setMobileMenuOpen(false)}>
                       <Button className="w-full bg-accent text-accent-foreground" data-testid="button-mobile-cta">
-                        Start Order
+                        {t.nav.startOrder}
                       </Button>
                     </Link>
                   </>
