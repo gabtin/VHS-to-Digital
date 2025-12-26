@@ -34,7 +34,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 
 export default function Dashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  
+
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders/user", user?.id],
     queryFn: async () => {
@@ -82,12 +82,12 @@ export default function Dashboard() {
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
               {t.dashboard.loginDescription}
             </p>
-            <a href="/api/login">
+            <Link href="/auth">
               <Button className="bg-accent text-accent-foreground" data-testid="button-login">
                 <LogIn className="w-4 h-4 mr-2" />
                 {t.dashboard.loginButton}
               </Button>
-            </a>
+            </Link>
           </CardContent>
         </Card>
       </div>

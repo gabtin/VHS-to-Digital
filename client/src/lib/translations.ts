@@ -9,8 +9,9 @@ export const t = {
     dashboard: "I Miei Ordini",
     adminPanel: "Pannello Admin",
     startOrder: "Nuovo Ordine",
+    profile: "Profilo",
   },
-  
+
   hero: {
     badge: "Scelto da oltre 50.000 famiglie",
     title: "I Tuoi Ricordi Meritano una Seconda Vita",
@@ -18,7 +19,7 @@ export const t = {
     cta: "Inizia - Preventivo Gratuito",
     secondary: "Scopri Come Funziona",
   },
-  
+
   howItWorks: {
     title: "Come Funziona",
     subtitle: "Quattro semplici passi per trasformare i tuoi ricordi analogici in tesori digitali duraturi",
@@ -42,7 +43,7 @@ export const t = {
     ],
     step: "Passo",
   },
-  
+
   trust: {
     title: "Scelto dalle Famiglie Italiane",
     subtitle: "Unisciti a migliaia di persone che hanno preservato i loro preziosi ricordi con ReelRevive",
@@ -75,7 +76,7 @@ export const t = {
       { label: "Garanzia Soddisfatti" },
     ],
   },
-  
+
   pricing: {
     previewTitle: "Prezzi Semplici e Trasparenti",
     previewSubtitle: "Nessun costo nascosto. Sai esattamente cosa pagherai prima di iniziare.",
@@ -107,7 +108,7 @@ export const t = {
     ctaSubtitle: "Usa il nostro configuratore per vedere esattamente quanto costera il tuo progetto.",
     ctaButton: "Inizia il Tuo Ordine",
   },
-  
+
   faq: {
     title: "Domande Frequenti",
     subtitle: "Tutto quello che devi sapere sul nostro servizio di digitalizzazione VHS",
@@ -138,19 +139,19 @@ export const t = {
       },
     ],
   },
-  
+
   cta: {
     title: "Pronto a Preservare i Tuoi Ricordi?",
     subtitle: "Non lasciare che i tuoi preziosi momenti sbiadiscano. Inizia il tuo ordine oggi e dai ai tuoi ricordi la vita digitale che meritano.",
     button: "Inizia Ora",
   },
-  
+
   wizard: {
     title: "Configura il Tuo Ordine",
     step: "Passo",
     of: "di",
     steps: ["Formato", "Quantita", "Durata", "Output", "Gestione", "Velocita", "Riepilogo"],
-    
+
     sections: {
       tapes: "Cassette",
       duration: "Durata Stimata",
@@ -158,20 +159,20 @@ export const t = {
       handling: "Gestione Cassette",
       processing: "Velocita di Elaborazione",
     },
-    
+
     step1: {
       title: "Che tipo di cassette hai?",
       subtitle: "Seleziona tutti quelli applicabili. Potrai aggiungere le quantita nel prossimo passo.",
       helpButton: "Non sei sicuro di quale formato hai?",
       helpTitle: "Guida all'Identificazione del Formato",
     },
-    
+
     step2: {
       title: "Quante cassette hai?",
       subtitle: "Regola la quantita per ogni formato selezionato.",
       totalTapes: "Cassette totali:",
     },
-    
+
     step3: {
       title: "Approssimativamente quante ore di filmato?",
       subtitle: "Questo ci aiuta a fornire una stima accurata. Addebitiamo solo per il filmato effettivo.",
@@ -190,13 +191,13 @@ export const t = {
         { label: "50+ ore", value: 60 },
       ],
     },
-    
+
     step4: {
       title: "Come vorresti ricevere i tuoi file?",
       subtitle: "Il download digitale e incluso in ogni ordine. Seleziona opzioni aggiuntive se desiderato.",
       dvdLabel: "Numero di copie DVD",
     },
-    
+
     step5: {
       title: "Cosa dobbiamo fare con le tue cassette originali?",
       subtitle: "Scegli se farti restituire le cassette o riciclarle responsabilmente.",
@@ -208,7 +209,7 @@ export const t = {
       disposePrice: "Gratuito",
       disposeBadge: "Piu Popolare",
     },
-    
+
     step6: {
       title: "Quanto velocemente ne hai bisogno?",
       subtitle: "L'elaborazione standard richiede 2-3 settimane. L'elaborazione urgente e disponibile per chi ha fretta.",
@@ -219,7 +220,7 @@ export const t = {
       rushDescription: "Pronti in 5 giorni lavorativi",
       rushPrice: "+50%",
     },
-    
+
     step7: {
       title: "Rivedi il Tuo Ordine",
       subtitle: "Verifica tutto prima di procedere al pagamento.",
@@ -236,7 +237,7 @@ export const t = {
       giftLabel: "Questo e un regalo",
       giftDescription: "Aggiungeremo un tocco speciale all'imballaggio",
     },
-    
+
     summary: {
       title: "Riepilogo Ordine",
       baseCost: "Costo Base",
@@ -257,17 +258,17 @@ export const t = {
       backButton: "Indietro",
     },
   },
-  
+
   checkout: {
     title: "Completa il Tuo Ordine",
     subtitle: "Inserisci le tue informazioni per procedere",
     loginPrompt: "Accedi per Continuare",
     loginDescription: "Crea un account o accedi per completare il tuo ordine e tracciarlo.",
     loginButton: "Accedi con Replit",
-    
+
     shippingTitle: "Informazioni di Spedizione",
     shippingSubtitle: "Dove dobbiamo inviare la tua etichetta di spedizione?",
-    
+
     fields: {
       name: "Nome Completo",
       address: "Indirizzo",
@@ -276,14 +277,14 @@ export const t = {
       postalCode: "CAP",
       phone: "Telefono (opzionale)",
     },
-    
+
     paymentTitle: "Riepilogo Pagamento",
     payButton: "Paga Ora",
     securePayment: "Pagamento sicuro elaborato da Stripe",
     cancelledMessage: "Il tuo ordine e stato cancellato. Puoi ritentare il pagamento.",
     retryButton: "Riprova Pagamento",
   },
-  
+
   paymentSuccess: {
     title: "Pagamento Completato!",
     subtitle: "Il tuo ordine e stato effettuato con successo.",
@@ -298,7 +299,7 @@ export const t = {
     dashboardButton: "Vai alla Dashboard",
     homeButton: "Torna alla Home",
   },
-  
+
   dashboard: {
     title: "I Miei Ordini",
     subtitle: "Traccia i tuoi ordini e scarica i tuoi file digitali",
@@ -321,7 +322,7 @@ export const t = {
       lifetimeValue: "Valore Totale",
     },
   },
-  
+
   orderStatus: {
     pending: "In Attesa",
     label_sent: "Etichetta Inviata",
@@ -333,7 +334,7 @@ export const t = {
     complete: "Completato",
     cancelled: "Annullato",
   },
-  
+
   shippingLabel: {
     title: "Etichetta di Spedizione",
     downloadButton: "Scarica Etichetta",
@@ -363,7 +364,7 @@ export const t = {
       "Porta il pacco all'ufficio postale o chiedi il ritiro a domicilio",
     ],
   },
-  
+
   footer: {
     description: "Preserviamo i tuoi preziosi ricordi convertendo le videocassette VHS in formati digitali di alta qualita.",
     quickLinks: "Link Rapidi",
@@ -376,7 +377,7 @@ export const t = {
     copyright: "2024 ReelRevive. Tutti i diritti riservati. I tuoi ricordi, digitalizzati con cura.",
     address: "Via dei Ricordi 123\nMilano, MI 20121",
   },
-  
+
   about: {
     heroTitle: "Chi Siamo",
     heroSubtitle: "Una passione per preservare i ricordi delle famiglie italiane",
@@ -392,7 +393,7 @@ export const t = {
     teamTitle: "Il Nostro Team",
     teamSubtitle: "Professionisti appassionati al servizio dei tuoi ricordi",
   },
-  
+
   formats: {
     vhs: {
       name: "VHS",
@@ -420,7 +421,7 @@ export const t = {
       era: "1975-1988",
     },
   },
-  
+
   outputs: {
     mp4: {
       name: "Download Digitale (MP4)",
@@ -443,7 +444,7 @@ export const t = {
       price: "+10 EUR",
     },
   },
-  
+
   pricingTable: [
     { service: "Digitalizzazione base (per cassetta)", price: "25 EUR", included: false },
     { service: "Per ora di filmato", price: "10 EUR", included: false },
@@ -455,7 +456,7 @@ export const t = {
     { service: "Smaltimento ecologico", price: "Gratuito", included: true },
     { service: "Elaborazione urgente (5 giorni)", price: "+50%", included: false },
   ],
-  
+
   addons: [
     {
       title: "Chiavetta USB",
@@ -478,7 +479,7 @@ export const t = {
       price: "+50%",
     },
   ],
-  
+
   common: {
     loading: "Caricamento...",
     error: "Si e verificato un errore",

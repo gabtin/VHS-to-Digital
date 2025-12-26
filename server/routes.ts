@@ -84,8 +84,8 @@ export async function registerRoutes(
     try {
       // Users can only view their own profile, unless admin
       const authUser = req.user as any;
-      if (authUser.claims.sub !== req.params.id) {
-        const dbUser = await storage.getUser(authUser.claims.sub);
+      if (authUser.id !== req.params.id) {
+        const dbUser = await storage.getUser(authUser.id);
         if (!dbUser?.isAdmin) {
           return res.status(403).json({ error: "Forbidden" });
         }
@@ -353,8 +353,8 @@ export async function registerRoutes(
 
       // Check ownership or admin
       const authUser = req.user as any;
-      if (order.userId !== authUser.claims.sub) {
-        const dbUser = await storage.getUser(authUser.claims.sub);
+      if (order.userId !== authUser.id) {
+        const dbUser = await storage.getUser(authUser.id);
         if (!dbUser?.isAdmin) {
           return res.status(403).json({ error: "Forbidden" });
         }
@@ -392,8 +392,8 @@ export async function registerRoutes(
     try {
       // Users can only view their own orders
       const authUser = req.user as any;
-      if (authUser.claims.sub !== req.params.userId) {
-        const dbUser = await storage.getUser(authUser.claims.sub);
+      if (authUser.id !== req.params.userId) {
+        const dbUser = await storage.getUser(authUser.id);
         if (!dbUser?.isAdmin) {
           return res.status(403).json({ error: "Forbidden" });
         }

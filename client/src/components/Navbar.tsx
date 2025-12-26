@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/use-auth";
-import { Sun, Moon, Menu, X, Film, LogOut, User } from "lucide-react";
+import { Sun, Moon, Menu, X, Film, LogOut, User, Mail } from "lucide-react";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { t } from "@/lib/translations";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, logout, resendVerificationMutation } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -57,109 +58,136 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-accent">
-              <Film className="w-5 h-5 text-accent-foreground" />
+    <>
+      {user && !user.emailVerified && !user.oidcId && (
+        <div className="bg-primary/10 border-b border-primary/20 py-2 px-4 flex items-center justify-center gap-4 text-sm font-medium animate-in fade-in slide-in-from-top-4 duration-500">
+          <span className="text-secondary-foreground flex items-center gap-2">
+            <Mail className="w-4 h-4 text-primary" />
+            Il tuo indirizzo email non è ancora verificato.
+          </span>
+          <Button
+            variant="link"
+            className="h-auto p-0 text-primary hover:text-primary/80 underline font-semibold"
+            disabled={resendVerificationMutation.isPending}
+            onClick={() => resendVerificationMutation.mutate()}
+          >
+            {resendVerificationMutation.isPending ? "Invio in corso..." : "Invia di nuovo il link"}
+          </Button>
+        </div>
+      )}
+      <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-accent">
+                <Film className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <span className="text-xl font-semibold text-foreground tracking-tight" data-testid="text-logo">
+                ReelRevive
+              </span>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link key={link.href} href={link.href}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "font-medium",
+                      isActive(link.href) && "bg-secondary"
+                    )}
+                    data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
+                  </Button>
+                </Link>
+              ))}
             </div>
-            <span className="text-xl font-semibold text-foreground tracking-tight" data-testid="text-logo">
-              ReelRevive
-            </span>
-          </Link>
 
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`font-medium ${isActive(link.href) ? "bg-secondary" : ""}`}
-                  data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  {link.label}
-                </Button>
-              </Link>
-            ))}
-          </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                data-testid="button-theme-toggle"
+              >
+                {theme === "light" ? (
+                  <Moon className="w-4 h-4" />
+                ) : (
+                  <Sun className="w-4 h-4" />
+                )}
+              </Button>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              data-testid="button-theme-toggle"
-            >
-              {theme === "light" ? (
-                <Moon className="w-4 h-4" />
-              ) : (
-                <Sun className="w-4 h-4" />
-              )}
-            </Button>
-
-            <div className="hidden md:flex items-center gap-2">
-              {isLoading ? (
-                <div className="w-20 h-8 bg-muted rounded animate-pulse" />
-              ) : isAuthenticated && user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
-                      <Avatar className="w-7 h-7">
-                        <AvatarImage src={user.profileImageUrl || undefined} />
-                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">{getDisplayName()}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <Link href="/dashboard">
-                      <DropdownMenuItem data-testid="link-dashboard">
-                        <User className="w-4 h-4 mr-2" />
-                        {t.nav.dashboard}
-                      </DropdownMenuItem>
-                    </Link>
-                    {user.isAdmin && (
-                      <Link href="/admin">
-                        <DropdownMenuItem data-testid="link-admin">
-                          {t.nav.adminPanel}
+              <div className="hidden md:flex items-center gap-2">
+                {isLoading ? (
+                  <div className="w-20 h-8 bg-muted rounded animate-pulse" />
+                ) : isAuthenticated && user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
+                        <Avatar className="w-7 h-7">
+                          <AvatarImage src={user.profileImageUrl || undefined} />
+                          <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{getDisplayName()}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <Link href="/dashboard">
+                        <DropdownMenuItem data-testid="link-dashboard">
+                          <User className="w-4 h-4 mr-2" />
+                          {t.nav.dashboard}
                         </DropdownMenuItem>
                       </Link>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => logout()} data-testid="button-logout">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {t.nav.logout}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <a href="/api/login">
-                    <Button variant="outline" size="sm" data-testid="button-login">
-                      {t.nav.login}
-                    </Button>
-                  </a>
-                  <Link href="/get-started">
-                    <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
-                      {t.nav.startOrder}
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
+                      <Link href="/profile">
+                        <DropdownMenuItem data-testid="link-profile">
+                          <User className="w-4 h-4 mr-2" />
+                          {t.nav.profile}
+                        </DropdownMenuItem>
+                      </Link>
+                      {user.isAdmin && (
+                        <Link href="/admin">
+                          <DropdownMenuItem data-testid="link-admin">
+                            {t.nav.adminPanel}
+                          </DropdownMenuItem>
+                        </Link>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => logout()} data-testid="button-logout">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        {t.nav.logout}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Link href="/auth">
+                      <Button variant="outline" size="sm" data-testid="button-login">
+                        {t.nav.login}
+                      </Button>
+                    </Link>
+                    <Link href="/get-started">
+                      <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
+                        {t.nav.startOrder}
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              data-testid="button-mobile-menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                data-testid="button-mobile-menu"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -170,7 +198,10 @@ export function Navbar() {
                 <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActive(link.href) ? "bg-secondary" : ""}`}
+                    className={cn(
+                      "w-full justify-start",
+                      isActive(link.href) && "bg-secondary"
+                    )}
                     data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     {link.label}
@@ -194,6 +225,11 @@ export function Navbar() {
                         {t.nav.dashboard}
                       </Button>
                     </Link>
+                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full" data-testid="link-mobile-profile">
+                        {t.nav.profile}
+                      </Button>
+                    </Link>
                     {user.isAdmin && (
                       <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
                         <Button variant="outline" className="w-full" data-testid="link-mobile-admin">
@@ -208,11 +244,11 @@ export function Navbar() {
                   </>
                 ) : (
                   <>
-                    <a href="/api/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full" data-testid="button-mobile-login">
                         {t.nav.login}
                       </Button>
-                    </a>
+                    </Link>
                     <Link href="/get-started" onClick={() => setMobileMenuOpen(false)}>
                       <Button className="w-full bg-accent text-accent-foreground" data-testid="button-mobile-cta">
                         {t.nav.startOrder}
@@ -224,7 +260,7 @@ export function Navbar() {
             </div>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }

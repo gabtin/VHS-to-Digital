@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Form,
   FormControl,
@@ -63,12 +64,13 @@ interface OrderPricing {
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [orderConfig, setOrderConfig] = useState<OrderConfig | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const configParam = params.get("config");
-    
+
     if (configParam) {
       try {
         const config = JSON.parse(decodeURIComponent(configParam));
@@ -90,14 +92,14 @@ export default function Checkout() {
 
   const pricing = useMemo<OrderPricing | null>(() => {
     if (!orderConfig) return null;
-    
+
     const basePrice = orderConfig.totalTapes * PRICING.basePricePerTape;
     const hourlyPrice = orderConfig.estimatedHours * PRICING.pricePerHour;
     const usbPrice = orderConfig.outputFormats.includes("usb") ? PRICING.usbDrive : 0;
     const dvdPrice = orderConfig.outputFormats.includes("dvd") ? (orderConfig.dvdQuantity || 1) * PRICING.dvdPerDisc : 0;
     const cloudPrice = orderConfig.outputFormats.includes("cloud") ? PRICING.cloudStorage : 0;
     const returnPrice = orderConfig.tapeHandling === "return" ? PRICING.returnShipping : 0;
-    
+
     const subtotal = basePrice + hourlyPrice + usbPrice + dvdPrice + cloudPrice + returnPrice;
     const rushFee = orderConfig.processingSpeed === "rush" ? subtotal * PRICING.rushMultiplier : 0;
     const total = subtotal + rushFee;
@@ -108,21 +110,36 @@ export default function Checkout() {
   const form = useForm<ShippingFormValues>({
     resolver: zodResolver(shippingFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      shippingName: "",
-      shippingAddress: "",
-      shippingCity: "",
-      shippingState: "",
-      shippingZip: "",
-      shippingPhone: "",
+      name: user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.name || ""),
+      email: user?.email || "",
+      shippingName: user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user?.name || ""),
+      shippingAddress: user?.defaultAddress || "",
+      shippingCity: user?.defaultCity || "",
+      shippingState: user?.defaultState || "",
+      shippingZip: user?.defaultZip || "",
+      shippingPhone: user?.phone || "",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user.name || ""),
+        email: user.email || "",
+        shippingName: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : (user.name || ""),
+        shippingAddress: user.defaultAddress || "",
+        shippingCity: user.defaultCity || "",
+        shippingState: user.defaultState || "",
+        shippingZip: user.defaultZip || "",
+        shippingPhone: user.phone || "",
+      });
+    }
+  }, [user, form]);
 
   const createCheckoutMutation = useMutation({
     mutationFn: async (data: ShippingFormValues) => {
       if (!orderConfig || !pricing) throw new Error("Configurazione ordine non trovata");
-      
+
       const response = await apiRequest("POST", "/api/stripe/create-checkout-session", {
         orderConfig,
         shippingInfo: data,
@@ -212,9 +229,9 @@ export default function Checkout() {
                           <FormItem>
                             <FormLabel>{t.checkout.fields.name}</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Mario Rossi" 
-                                {...field} 
+                              <Input
+                                placeholder="Mario Rossi"
+                                {...field}
                                 data-testid="input-name"
                               />
                             </FormControl>
@@ -230,10 +247,10 @@ export default function Checkout() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="email" 
-                                placeholder="mario@esempio.it" 
-                                {...field} 
+                              <Input
+                                type="email"
+                                placeholder="mario@esempio.it"
+                                {...field}
                                 data-testid="input-email"
                               />
                             </FormControl>
@@ -252,9 +269,9 @@ export default function Checkout() {
                         <FormItem>
                           <FormLabel>Nome Destinatario</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="Nome sull'etichetta di spedizione" 
-                              {...field} 
+                            <Input
+                              placeholder="Nome sull'etichetta di spedizione"
+                              {...field}
                               data-testid="input-shipping-name"
                             />
                           </FormControl>
@@ -270,9 +287,9 @@ export default function Checkout() {
                         <FormItem>
                           <FormLabel>{t.checkout.fields.address}</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="Via Roma 123" 
-                              {...field} 
+                            <Input
+                              placeholder="Via Roma 123"
+                              {...field}
                               data-testid="input-address"
                             />
                           </FormControl>
@@ -289,9 +306,9 @@ export default function Checkout() {
                           <FormItem className="col-span-2 md:col-span-2">
                             <FormLabel>{t.checkout.fields.city}</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Milano" 
-                                {...field} 
+                              <Input
+                                placeholder="Milano"
+                                {...field}
                                 data-testid="input-city"
                               />
                             </FormControl>
@@ -307,9 +324,9 @@ export default function Checkout() {
                           <FormItem>
                             <FormLabel>{t.checkout.fields.province}</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="MI" 
-                                {...field} 
+                              <Input
+                                placeholder="MI"
+                                {...field}
                                 data-testid="input-state"
                               />
                             </FormControl>
@@ -325,9 +342,9 @@ export default function Checkout() {
                           <FormItem>
                             <FormLabel>{t.checkout.fields.postalCode}</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="20121" 
-                                {...field} 
+                              <Input
+                                placeholder="20121"
+                                {...field}
                                 data-testid="input-zip"
                               />
                             </FormControl>
@@ -344,10 +361,10 @@ export default function Checkout() {
                         <FormItem>
                           <FormLabel>{t.checkout.fields.phone}</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="tel" 
-                              placeholder="+39 02 1234 5678" 
-                              {...field} 
+                            <Input
+                              type="tel"
+                              placeholder="+39 02 1234 5678"
+                              {...field}
                               data-testid="input-phone"
                             />
                           </FormControl>
@@ -356,9 +373,9 @@ export default function Checkout() {
                       )}
                     />
 
-                    <Button 
-                      type="submit" 
-                      size="lg" 
+                    <Button
+                      type="submit"
+                      size="lg"
                       className="w-full bg-accent text-accent-foreground"
                       disabled={createCheckoutMutation.isPending}
                       data-testid="button-place-order"
@@ -375,7 +392,7 @@ export default function Checkout() {
                         </>
                       )}
                     </Button>
-                    
+
                     <p className="text-xs text-center text-muted-foreground">
                       {t.checkout.securePayment}
                     </p>

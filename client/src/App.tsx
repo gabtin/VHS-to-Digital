@@ -21,6 +21,13 @@ import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import ShippingLabel from "@/pages/ShippingLabel";
+import AuthPage from "@/pages/AuthPage";
+import ProfilePage from "@/pages/ProfilePage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
+import { Loader2 } from "lucide-react";
 
 function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -32,6 +39,24 @@ function CustomerLayout({ children }: { children: React.ReactNode }) {
       <Footer />
     </div>
   );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+
+  return <>{children}</>;
 }
 
 function Router() {
@@ -57,20 +82,34 @@ function Router() {
           <GetStarted />
         </CustomerLayout>
       </Route>
+      <Route path="/auth" component={AuthPage} />
       <Route path="/dashboard">
-        <CustomerLayout>
-          <Dashboard />
-        </CustomerLayout>
+        <ProtectedRoute>
+          <CustomerLayout>
+            <Dashboard />
+          </CustomerLayout>
+        </ProtectedRoute>
       </Route>
       <Route path="/order/:id">
         <CustomerLayout>
           <OrderStatus />
         </CustomerLayout>
       </Route>
+      <Route path="/profile">
+        <ProtectedRoute>
+          <CustomerLayout>
+            <ProfilePage />
+          </CustomerLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/checkout">
-        <CustomerLayout>
-          <Checkout />
-        </CustomerLayout>
+        <ProtectedRoute>
+          <CustomerLayout>
+            <Checkout />
+          </CustomerLayout>
+        </ProtectedRoute>
       </Route>
       <Route path="/order-confirmation">
         <CustomerLayout>
