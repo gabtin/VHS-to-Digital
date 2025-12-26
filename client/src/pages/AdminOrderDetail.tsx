@@ -40,6 +40,7 @@ import {
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, OrderNote, TapeFormat } from "@shared/schema";
+import { AdminSidebar } from "@/components/AdminSidebar";
 
 const statusOptions = [
   { value: "pending", label: "Pending" },
@@ -65,46 +66,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive" },
 };
 
-function AdminSidebar() {
-  const [location] = useLocation();
-
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: Package, label: "Orders", href: "/admin/orders" },
-    { icon: Users, label: "Customers", href: "/admin/customers" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
-  ];
-
-  return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-sidebar-primary flex items-center justify-center">
-            <Film className="w-4 h-4 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <div className="font-semibold text-sidebar-foreground">ReelRevive</div>
-            <div className="text-xs text-sidebar-foreground/70">Admin Panel</div>
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={location.startsWith(item.href)}>
-                <Link href={item.href}>
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
-  );
-}
+// Local AdminSidebar removed
 
 export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -258,8 +220,8 @@ export default function AdminOrderDetail() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button 
-                        className="bg-accent text-accent-foreground" 
+                      <Button
+                        className="bg-accent text-accent-foreground"
                         onClick={() => updateStatusMutation.mutate(status || order.status)}
                         disabled={updateStatusMutation.isPending || !status || status === order.status}
                         data-testid="button-save-status"
@@ -356,8 +318,8 @@ export default function AdminOrderDetail() {
                         rows={3}
                         data-testid="textarea-new-note"
                       />
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => addNoteMutation.mutate(newNote)}
                         disabled={addNoteMutation.isPending || !newNote.trim()}
                         data-testid="button-add-note"

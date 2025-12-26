@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Order, type InsertOrder, type OrderNote, type InsertOrderNote, users, orders, orderNotes } from "@shared/schema";
+import { type User, type InsertUser, type Order, type InsertOrder, type OrderNote, type InsertOrderNote, type PricingConfig, type InsertPricingConfig, type ProductAvailability, type InsertProductAvailability, users, orders, orderNotes, pricingConfigs, productAvailability, PRICING, tapeFormats, outputFormats } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -8,7 +8,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
-  
+
   getOrder(id: string): Promise<Order | undefined>;
   getOrderByNumber(orderNumber: string): Promise<Order | undefined>;
   getOrderByStripeSessionId(sessionId: string): Promise<Order | undefined>;
@@ -17,16 +17,23 @@ export interface IStorage {
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: string, data: Partial<InsertOrder>): Promise<Order | undefined>;
   deleteOrder(id: string): Promise<boolean>;
-  
+
   getOrderNotes(orderId: string): Promise<OrderNote[]>;
   createOrderNote(note: InsertOrderNote): Promise<OrderNote>;
-  
+
   getOrderStats(): Promise<{
     totalOrders: number;
     pendingOrders: number;
     completedOrders: number;
     totalRevenue: number;
   }>;
+
+  // New Pricing & Availability methods
+  getPricingConfigs(): Promise<PricingConfig[]>;
+  updatePricingConfig(key: string, value: string): Promise<PricingConfig | undefined>;
+  getProductAvailability(): Promise<ProductAvailability[]>;
+  updateProductAvailability(name: string, isActive: boolean): Promise<ProductAvailability | undefined>;
+  seedInitialConfigs(): Promise<void>;
 }
 
 function generateOrderNumber(): string {
@@ -123,8 +130,8 @@ export class DatabaseStorage implements IStorage {
       sql`${orders.status} NOT IN ('complete', 'cancelled')`
     );
     const [completedResult] = await db.select({ count: count() }).from(orders).where(eq(orders.status, "complete"));
-    const [revenueResult] = await db.select({ 
-      total: sql<string>`COALESCE(SUM(${orders.total}), 0)` 
+    const [revenueResult] = await db.select({
+      total: sql<string>`COALESCE(SUM(${orders.total}), 0)`
     }).from(orders).where(eq(orders.status, "complete"));
 
     return {
@@ -133,6 +140,55 @@ export class DatabaseStorage implements IStorage {
       completedOrders: completedResult?.count ?? 0,
       totalRevenue: parseFloat(revenueResult?.total ?? "0"),
     };
+  }
+
+  async getPricingConfigs(): Promise<PricingConfig[]> {
+    return db.select().from(pricingConfigs);
+  }
+
+  async updatePricingConfig(key: string, value: string): Promise<PricingConfig | undefined> {
+    const [config] = await db.update(pricingConfigs)
+      .set({ value, updatedAt: new Date() })
+      .where(eq(pricingConfigs.key, key))
+      .returning();
+    return config;
+  }
+
+  async getProductAvailability(): Promise<ProductAvailability[]> {
+    return db.select().from(productAvailability);
+  }
+
+  async updateProductAvailability(name: string, isActive: boolean): Promise<ProductAvailability | undefined> {
+    const [availability] = await db.update(productAvailability)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(productAvailability.name, name))
+      .returning();
+    return availability;
+  }
+
+  async seedInitialConfigs(): Promise<void> {
+    // Seed pricing if empty
+    const existingPricing = await this.getPricingConfigs();
+    if (existingPricing.length === 0) {
+      const initialPricing = [
+        { key: "basePricePerTape", value: PRICING.basePricePerTape.toString(), description: "Base price per tape" },
+        { key: "pricePerHour", value: PRICING.pricePerHour.toString(), description: "Price per hour of conversion" },
+        { key: "usbDrive", value: PRICING.usbDrive.toString(), description: "Price for USB drive" },
+        { key: "dvdPerDisc", value: PRICING.dvdPerDisc.toString(), description: "Price per DVD disc" },
+        { key: "cloudStorage", value: PRICING.cloudStorage.toString(), description: "Price for cloud storage link" },
+        { key: "returnShipping", value: PRICING.returnShipping.toString(), description: "Return shipping fee" },
+        { key: "rushMultiplier", value: PRICING.rushMultiplier.toString(), description: "Multiplier for rush processing (0.5 = 50% extra)" },
+      ];
+      await db.insert(pricingConfigs).values(initialPricing);
+    }
+
+    // Seed availability if empty
+    const existingAvailability = await this.getProductAvailability();
+    if (existingAvailability.length === 0) {
+      const tapeInitial = tapeFormats.map(name => ({ type: "tape_format" as const, name, isActive: true }));
+      const outputInitial = outputFormats.map(name => ({ type: "output_format" as const, name, isActive: true }));
+      await db.insert(productAvailability).values([...tapeInitial, ...outputInitial]);
+    }
   }
 }
 

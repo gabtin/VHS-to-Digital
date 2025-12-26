@@ -16,6 +16,7 @@ import OrderStatus from "@/pages/OrderStatus";
 import Admin from "@/pages/Admin";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminOrderDetail from "@/pages/AdminOrderDetail";
+import AdminSettings from "@/pages/AdminSettings";
 import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
 import PaymentSuccess from "@/pages/PaymentSuccess";
@@ -89,6 +90,8 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/orders/:id" component={AdminOrderDetail} />
+      <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/customers" component={Admin} />
       <Route>
         <CustomerLayout>
           <NotFound />

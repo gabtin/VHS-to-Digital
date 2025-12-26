@@ -47,7 +47,7 @@ export type ProcessingSpeed = typeof processingSpeedOptions[number];
 // Order status enum values
 export const orderStatuses = [
   "pending",
-  "label_sent", 
+  "label_sent",
   "tapes_received",
   "in_progress",
   "quality_check",
@@ -64,20 +64,20 @@ export const orders = pgTable("orders", {
   userId: varchar("user_id").references(() => users.id),
   orderNumber: text("order_number").notNull().unique(),
   status: text("status").notNull().default("pending"),
-  
+
   // Tape details
   tapeFormats: jsonb("tape_formats").$type<Record<TapeFormat, number>>().notNull(),
   totalTapes: integer("total_tapes").notNull(),
   estimatedHours: integer("estimated_hours").notNull(),
-  
+
   // Output options
   outputFormats: text("output_formats").array().notNull(),
   dvdQuantity: integer("dvd_quantity").default(0),
-  
+
   // Handling and processing
   tapeHandling: text("tape_handling").notNull(),
   processingSpeed: text("processing_speed").notNull().default("standard"),
-  
+
   // Shipping info
   shippingName: text("shipping_name").notNull(),
   shippingAddress: text("shipping_address").notNull(),
@@ -85,23 +85,23 @@ export const orders = pgTable("orders", {
   shippingState: text("shipping_state").notNull(),
   shippingZip: text("shipping_zip").notNull(),
   shippingPhone: text("shipping_phone"),
-  
+
   // Special instructions
   specialInstructions: text("special_instructions"),
   isGift: boolean("is_gift").default(false),
-  
+
   // Pricing
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   rushFee: decimal("rush_fee", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
-  
+
   // Payment
   stripeSessionId: text("stripe_session_id").unique(),
-  
+
   // Tracking
   trackingNumber: text("tracking_number"),
   downloadUrl: text("download_url"),
-  
+
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -116,6 +116,24 @@ export const orderNotes = pgTable("order_notes", {
   note: text("note").notNull(),
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Pricing configuration table
+export const pricingConfigs = pgTable("pricing_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // e.g., 'basePricePerTape'
+  value: decimal("value", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Product availability table
+export const productAvailability = pgTable("product_availability", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type", { enum: ["tape_format", "output_format"] }).notNull(),
+  name: text("name").notNull(), // e.g., 'vhs', 'usb'
+  isActive: boolean("is_active").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
@@ -160,6 +178,16 @@ export const insertOrderNoteSchema = createInsertSchema(orderNotes).omit({
   createdAt: true,
 });
 
+export const insertPricingConfigSchema = createInsertSchema(pricingConfigs).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertProductAvailabilitySchema = createInsertSchema(productAvailability).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -169,6 +197,12 @@ export type Order = typeof orders.$inferSelect;
 
 export type InsertOrderNote = z.infer<typeof insertOrderNoteSchema>;
 export type OrderNote = typeof orderNotes.$inferSelect;
+
+export type PricingConfig = typeof pricingConfigs.$inferSelect;
+export type InsertPricingConfig = z.infer<typeof insertPricingConfigSchema>;
+
+export type ProductAvailability = typeof productAvailability.$inferSelect;
+export type InsertProductAvailability = z.infer<typeof insertProductAvailabilitySchema>;
 
 // Order configuration type for the wizard
 export const orderConfigSchema = z.object({

@@ -4,28 +4,39 @@ import { storage } from "./storage";
 import { insertUserSchema, insertOrderSchema, insertOrderNoteSchema, orderConfigSchema, PRICING, type TapeFormat, type OutputFormat } from "@shared/schema";
 import { z } from "zod";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { isAuthenticated, ensureAdmin } from "./auth";
 
-function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
+async function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
+  const configs = await storage.getPricingConfigs();
+  const pricing: Record<string, number> = {};
+  configs.forEach(c => {
+    pricing[c.key] = parseFloat(c.value);
+  });
+
+  // Fallback to PRICING constants if DB is missing values (shouldn't happen with seeding)
+  const getPrice = (key: string, fallback: number) => pricing[key] ?? fallback;
+
   const totalTapes = Object.values(config.tapeFormats as Record<string, number>).reduce((sum, qty) => sum + qty, 0);
-  let subtotal = totalTapes * PRICING.basePricePerTape;
-  subtotal += config.estimatedHours * PRICING.pricePerHour;
-  
+  let subtotal = totalTapes * getPrice("basePricePerTape", PRICING.basePricePerTape);
+  subtotal += config.estimatedHours * getPrice("pricePerHour", PRICING.pricePerHour);
+
   if (config.outputFormats.includes("usb")) {
-    subtotal += PRICING.usbDrive;
+    subtotal += getPrice("usbDrive", PRICING.usbDrive);
   }
   if (config.outputFormats.includes("dvd") && config.dvdQuantity) {
-    subtotal += config.dvdQuantity * PRICING.dvdPerDisc;
+    subtotal += config.dvdQuantity * getPrice("dvdPerDisc", PRICING.dvdPerDisc);
   }
   if (config.outputFormats.includes("cloud")) {
-    subtotal += PRICING.cloudStorage;
+    subtotal += getPrice("cloudStorage", PRICING.cloudStorage);
   }
   if (config.tapeHandling === "return") {
-    subtotal += PRICING.returnShipping;
+    subtotal += getPrice("returnShipping", PRICING.returnShipping);
   }
-  
-  const rushFee = config.processingSpeed === "rush" ? subtotal * PRICING.rushMultiplier : 0;
+
+  const rushMultiplier = getPrice("rushMultiplier", PRICING.rushMultiplier);
+  const rushFee = config.processingSpeed === "rush" ? subtotal * rushMultiplier : 0;
   const total = subtotal + rushFee;
-  
+
   return { subtotal, rushFee, total };
 }
 
@@ -47,9 +58,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
   // ============ USER ROUTES ============
-  
+
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
       const parsed = insertUserSchema.parse(req.body);
@@ -69,8 +80,17 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/users/:id", async (req: Request, res: Response) => {
+  app.get("/api/users/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Users can only view their own profile, unless admin
+      const authUser = req.user as any;
+      if (authUser.claims.sub !== req.params.id) {
+        const dbUser = await storage.getUser(authUser.claims.sub);
+        if (!dbUser?.isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -81,7 +101,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/users/email/:email", async (req: Request, res: Response) => {
+  app.get("/api/users/email/:email", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const user = await storage.getUserByEmail(req.params.email);
       if (!user) {
@@ -94,11 +114,11 @@ export async function registerRoutes(
   });
 
   // ============ ORDER ROUTES ============
-  
+
   app.post("/api/orders", async (req: Request, res: Response) => {
     try {
       const parsed = createOrderSchema.parse(req.body);
-      
+
       let user = await storage.getUserByEmail(parsed.email);
       if (!user) {
         user = await storage.createUser({
@@ -111,10 +131,10 @@ export async function registerRoutes(
           defaultZip: parsed.shippingZip,
         });
       }
-      
+
       const totalTapes = Object.values(parsed.tapeFormats as Record<string, number>).reduce((sum, qty) => sum + qty, 0);
-      const pricing = calculatePricing(parsed);
-      
+      const pricing = await calculatePricing(parsed);
+
       const order = await storage.createOrder({
         userId: user.id,
         status: "pending",
@@ -137,7 +157,7 @@ export async function registerRoutes(
         rushFee: pricing.rushFee.toFixed(2),
         total: pricing.total.toFixed(2),
       });
-      
+
       res.status(201).json(order);
     } catch (error) {
       console.error("Create order error:", error);
@@ -163,22 +183,24 @@ export async function registerRoutes(
   app.post("/api/stripe/create-checkout-session", async (req: Request, res: Response) => {
     try {
       const { orderConfig, shippingInfo } = req.body;
-      
+
       const parsedConfig = orderConfigSchema.parse(orderConfig);
       const parsedShipping = shippingInfoSchema.extend({
         email: z.string().email(),
         name: z.string().min(1),
       }).parse(shippingInfo);
 
-      const serverPricing = calculatePricing(parsedConfig);
+      const serverPricing = await calculatePricing(parsedConfig);
 
       const stripe = await getUncachableStripeClient();
-      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-      
+
+      const baseUrl = process.env.APP_URL ||
+        (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : "http://localhost:5050");
+
       const totalTapes = Object.values(parsedConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
-      
+
       const lineItems: any[] = [];
-      
+
       if (totalTapes > 0) {
         lineItems.push({
           price_data: {
@@ -192,7 +214,7 @@ export async function registerRoutes(
           quantity: 1,
         });
       }
-      
+
       if (serverPricing.rushFee > 0) {
         lineItems.push({
           price_data: {
@@ -242,7 +264,7 @@ export async function registerRoutes(
   app.post("/api/stripe/verify-and-create-order", async (req: Request, res: Response) => {
     try {
       const { sessionId } = req.body;
-      
+
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID required" });
       }
@@ -254,11 +276,11 @@ export async function registerRoutes(
 
       const stripe = await getUncachableStripeClient();
       const session = await stripe.checkout.sessions.retrieve(sessionId);
-      
+
       if (session.payment_status !== 'paid') {
         return res.status(400).json({ error: "Payment not completed" });
       }
-      
+
       if (!session.metadata?.orderConfig || !session.metadata?.shippingInfo || !session.metadata?.serverPricing) {
         return res.status(400).json({ error: "Invalid session metadata" });
       }
@@ -266,7 +288,7 @@ export async function registerRoutes(
       const orderConfig = JSON.parse(session.metadata.orderConfig);
       const shippingInfo = JSON.parse(session.metadata.shippingInfo);
       const pricing = JSON.parse(session.metadata.serverPricing);
-      
+
       let user = await storage.getUserByEmail(shippingInfo.email);
       if (!user) {
         user = await storage.createUser({
@@ -279,9 +301,9 @@ export async function registerRoutes(
           defaultZip: shippingInfo.shippingZip,
         });
       }
-      
+
       const totalTapes = Object.values(orderConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
-      
+
       const order = await storage.createOrder({
         userId: user.id,
         status: "pending",
@@ -313,7 +335,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/orders", async (req: Request, res: Response) => {
+  app.get("/api/orders", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const orders = await storage.getAllOrders();
       res.json(orders);
@@ -322,32 +344,61 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/orders/:id", async (req: Request, res: Response) => {
+  app.get("/api/orders/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const order = await storage.getOrder(req.params.id);
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
+
+      // Check ownership or admin
+      const authUser = req.user as any;
+      if (order.userId !== authUser.claims.sub) {
+        const dbUser = await storage.getUser(authUser.claims.sub);
+        if (!dbUser?.isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch order" });
     }
   });
 
-  app.get("/api/orders/number/:orderNumber", async (req: Request, res: Response) => {
+  app.get("/api/orders/number/:orderNumber", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const order = await storage.getOrderByNumber(req.params.orderNumber);
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
+
+      // Check ownership or admin
+      const authUser = req.user as any;
+      if (order.userId !== authUser.claims.sub) {
+        const dbUser = await storage.getUser(authUser.claims.sub);
+        if (!dbUser?.isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch order" });
     }
   });
 
-  app.get("/api/orders/user/:userId", async (req: Request, res: Response) => {
+  app.get("/api/orders/user/:userId", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Users can only view their own orders
+      const authUser = req.user as any;
+      if (authUser.claims.sub !== req.params.userId) {
+        const dbUser = await storage.getUser(authUser.claims.sub);
+        if (!dbUser?.isAdmin) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
+
       const orders = await storage.getOrdersByUserId(req.params.userId);
       res.json(orders);
     } catch (error) {
@@ -355,26 +406,26 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/orders/:id", async (req: Request, res: Response) => {
+  app.patch("/api/orders/:id", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const existingOrder = await storage.getOrder(req.params.id);
       if (!existingOrder) {
         return res.status(404).json({ error: "Order not found" });
       }
-      
+
       const updateData: Record<string, unknown> = {};
       const allowedFields = ["status", "trackingNumber", "downloadUrl", "dueDate", "completedAt"];
-      
+
       for (const field of allowedFields) {
         if (req.body[field] !== undefined) {
           updateData[field] = req.body[field];
         }
       }
-      
+
       if (updateData.status === "complete" && !updateData.completedAt) {
         updateData.completedAt = new Date();
       }
-      
+
       const order = await storage.updateOrder(req.params.id, updateData);
       res.json(order);
     } catch (error) {
@@ -382,7 +433,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/orders/:id", async (req: Request, res: Response) => {
+  app.delete("/api/orders/:id", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const order = await storage.getOrder(req.params.id);
       if (!order) {
@@ -396,8 +447,8 @@ export async function registerRoutes(
   });
 
   // ============ ORDER NOTES ROUTES ============
-  
-  app.get("/api/orders/:orderId/notes", async (req: Request, res: Response) => {
+
+  app.get("/api/orders/:orderId/notes", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const notes = await storage.getOrderNotes(req.params.orderId);
       res.json(notes);
@@ -406,7 +457,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/orders/:orderId/notes", async (req: Request, res: Response) => {
+  app.post("/api/orders/:orderId/notes", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const parsed = insertOrderNoteSchema.parse({
         ...req.body,
@@ -423,8 +474,8 @@ export async function registerRoutes(
   });
 
   // ============ ADMIN STATS ROUTES ============
-  
-  app.get("/api/admin/stats", async (req: Request, res: Response) => {
+
+  app.get("/api/admin/stats", ensureAdmin, async (req: Request, res: Response) => {
     try {
       const stats = await storage.getOrderStats();
       res.json(stats);
@@ -433,18 +484,83 @@ export async function registerRoutes(
     }
   });
 
+  // ============ ADMIN PRICING ROUTES ============
+
+  app.get("/api/admin/pricing", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const configs = await storage.getPricingConfigs();
+      res.json(configs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pricing configs" });
+    }
+  });
+
+  app.patch("/api/admin/pricing/:key", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const { value } = req.body;
+      if (value === undefined) {
+        return res.status(400).json({ error: "Value is required" });
+      }
+      const config = await storage.updatePricingConfig(req.params.key, value.toString());
+      if (!config) {
+        return res.status(404).json({ error: "Pricing config not found" });
+      }
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update pricing config" });
+    }
+  });
+
+  // ============ ADMIN AVAILABILITY ROUTES ============
+
+  app.get("/api/admin/availability", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const availability = await storage.getProductAvailability();
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch product availability" });
+    }
+  });
+
+  app.patch("/api/admin/availability/:name", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const { isActive } = req.body;
+      if (isActive === undefined) {
+        return res.status(400).json({ error: "isActive is required" });
+      }
+      const availability = await storage.updateProductAvailability(req.params.name, isActive);
+      if (!availability) {
+        return res.status(404).json({ error: "Availability record not found" });
+      }
+      res.json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update product availability" });
+    }
+  });
+
   // ============ PRICING CALCULATOR ============
-  
+
   app.post("/api/pricing/calculate", async (req: Request, res: Response) => {
     try {
       const parsed = orderConfigSchema.parse(req.body);
-      const pricing = calculatePricing(parsed);
+      const pricing = await calculatePricing(parsed);
       res.json(pricing);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to calculate pricing" });
+    }
+  });
+
+  // ============ PUBLIC PRICING ROUTES ============
+
+  app.get("/api/pricing", async (req: Request, res: Response) => {
+    try {
+      const configs = await storage.getPricingConfigs();
+      res.json(configs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pricing configs" });
     }
   });
 

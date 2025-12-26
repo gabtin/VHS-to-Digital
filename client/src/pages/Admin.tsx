@@ -27,6 +27,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import type { Order } from "@shared/schema";
+import { AdminSidebar } from "@/components/AdminSidebar";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
@@ -39,46 +40,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   complete: { label: "Complete", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
 };
 
-function AdminSidebar() {
-  const [location] = useLocation();
-
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: Package, label: "Orders", href: "/admin/orders" },
-    { icon: Users, label: "Customers", href: "/admin/customers" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
-  ];
-
-  return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-sidebar-primary flex items-center justify-center">
-            <Film className="w-4 h-4 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <div className="font-semibold text-sidebar-foreground">ReelRevive</div>
-            <div className="text-xs text-sidebar-foreground/70">Admin Panel</div>
-          </div>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton asChild isActive={location === item.href}>
-                <Link href={item.href}>
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
-  );
-}
+// AdminSidebar removed (extracted to component)
 
 export default function Admin() {
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({

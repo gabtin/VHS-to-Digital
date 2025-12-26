@@ -2,17 +2,20 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CheckCircle2, 
+import {
+  CheckCircle2,
   ArrowRight,
   Disc,
   Video,
   HardDrive,
   Cloud,
   Package,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 import { t } from "@/lib/translations";
+import { useQuery } from "@tanstack/react-query";
+import type { PricingConfig } from "@shared/schema";
 
 const tapeFormats = [
   { id: "vhs", ...t.formats.vhs, icon: Video, popular: true },
@@ -25,6 +28,41 @@ const tapeFormats = [
 const addOnIcons = [HardDrive, Disc, Cloud, Zap];
 
 export default function Pricing() {
+  const { data: pricing, isLoading } = useQuery<PricingConfig[]>({
+    queryKey: ["/api/pricing"],
+  });
+
+  const getPriceValue = (key: string, suffix: string = "") => {
+    const config = pricing?.find(p => p.key === key);
+    return config ? `${config.value}${suffix}` : "";
+  };
+
+  // Map dynamic pricing to the table rows
+  const dynamicPricingTable = [
+    { service: t.pricingTable[0].service, price: getPriceValue("basePricePerTape", "€"), included: true },
+    { service: t.pricingTable[1].service, price: getPriceValue("pricePerHour", "€"), included: false },
+    { service: t.pricingTable[2].service, price: "Incluso", included: true }, // MP4
+    { service: t.pricingTable[3].service, price: getPriceValue("usbDrive", "€"), included: false },
+    { service: t.pricingTable[4].service, price: getPriceValue("dvdPerDisc", "€"), included: false },
+    { service: t.pricingTable[5].service, price: getPriceValue("cloudStorage", "€"), included: false },
+  ];
+
+  // Map dynamic pricing to add-ons
+  const dynamicAddons = [
+    { ...t.addons[0], price: getPriceValue("usbDrive", "€") },
+    { ...t.addons[1], price: getPriceValue("dvdPerDisc", "€") },
+    { ...t.addons[2], price: getPriceValue("cloudStorage", "€") },
+    { ...t.addons[3], price: "50% extra" }, // Rush
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <section className="py-16 bg-primary">
@@ -51,8 +89,8 @@ export default function Pricing() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {tapeFormats.map((format) => (
-              <Card 
-                key={format.id} 
+              <Card
+                key={format.id}
                 className="relative hover-elevate transition-shadow"
                 data-testid={`card-format-${format.id}`}
               >
@@ -97,7 +135,7 @@ export default function Pricing() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {t.pricingTable.map((row, i) => (
+                    {dynamicPricingTable.map((row, i) => (
                       <tr key={i} className="bg-background" data-testid={`row-pricing-${i}`}>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
@@ -146,7 +184,7 @@ export default function Pricing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {t.addons.map((addon, i) => {
+            {dynamicAddons.map((addon, i) => {
               const Icon = addOnIcons[i];
               return (
                 <Card key={i} className="hover-elevate" data-testid={`card-addon-${i}`}>

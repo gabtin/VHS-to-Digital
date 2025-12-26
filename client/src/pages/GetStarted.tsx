@@ -34,8 +34,10 @@ import {
   CheckCircle2,
   Edit2
 } from "lucide-react";
-import { PRICING, type TapeFormat, type OutputFormat, type TapeHandling, type ProcessingSpeed } from "@shared/schema";
+import { PRICING, type TapeFormat, type OutputFormat, type TapeHandling, type ProcessingSpeed, type PricingConfig, type ProductAvailability } from "@shared/schema";
 import { t } from "@/lib/translations";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 const STEPS = t.wizard.steps;
 
@@ -75,20 +77,53 @@ export default function GetStarted() {
     return selectedFormats.reduce((sum, format) => sum + (quantities[format] || 0), 0);
   }, [selectedFormats, quantities]);
 
-  const pricing = useMemo(() => {
-    const basePrice = totalTapes * PRICING.basePricePerTape;
-    const hourlyPrice = estimatedHours * PRICING.pricePerHour;
-    const usbPrice = outputFormats.includes("usb") ? PRICING.usbDrive : 0;
-    const dvdPrice = outputFormats.includes("dvd") ? dvdQuantity * PRICING.dvdPerDisc : 0;
-    const cloudPrice = outputFormats.includes("cloud") ? PRICING.cloudStorage : 0;
-    const returnPrice = tapeHandling === "return" ? PRICING.returnShipping : 0;
-    
+  const { data: pricingConfigs, isLoading: pricingLoading } = useQuery<PricingConfig[]>({
+    queryKey: ["/api/pricing"],
+  });
+
+  const { data: availability, isLoading: availabilityLoading } = useQuery<ProductAvailability[]>({
+    queryKey: ["/api/availability"], // Assuming this is public too or needed
+  });
+
+  const dynamicPricing = useMemo(() => {
+    const p: Record<string, number> = {};
+    pricingConfigs?.forEach(c => {
+      p[c.key] = parseFloat(c.value);
+    });
+
+    // Fallback to constants if loading or missing
+    const getVal = (key: string, fallback: number) => p[key] ?? fallback;
+
+    const basePrice = totalTapes * getVal("basePricePerTape", PRICING.basePricePerTape);
+    const hourlyPrice = estimatedHours * getVal("pricePerHour", PRICING.pricePerHour);
+    const usbPrice = outputFormats.includes("usb") ? getVal("usbDrive", PRICING.usbDrive) : 0;
+    const dvdPrice = outputFormats.includes("dvd") ? dvdQuantity * getVal("dvdPerDisc", PRICING.dvdPerDisc) : 0;
+    const cloudPrice = outputFormats.includes("cloud") ? getVal("cloudStorage", PRICING.cloudStorage) : 0;
+    const returnPrice = tapeHandling === "return" ? getVal("returnShipping", PRICING.returnShipping) : 0;
+
     const subtotal = basePrice + hourlyPrice + usbPrice + dvdPrice + cloudPrice + returnPrice;
-    const rushFee = processingSpeed === "rush" ? subtotal * PRICING.rushMultiplier : 0;
+    const rushMultiplier = getVal("rushMultiplier", PRICING.rushMultiplier);
+    const rushFee = processingSpeed === "rush" ? subtotal * rushMultiplier : 0;
     const total = subtotal + rushFee;
 
     return { basePrice, hourlyPrice, usbPrice, dvdPrice, cloudPrice, returnPrice, subtotal, rushFee, total };
-  }, [totalTapes, estimatedHours, outputFormats, dvdQuantity, tapeHandling, processingSpeed]);
+  }, [totalTapes, estimatedHours, outputFormats, dvdQuantity, tapeHandling, processingSpeed, pricingConfigs]);
+
+  const filteredTapeFormatOptions = useMemo(() => {
+    if (!availability) return tapeFormatOptions;
+    return tapeFormatOptions.filter(opt => {
+      const avail = availability.find(a => a.name === opt.id && a.type === "tape_format");
+      return avail ? avail.isActive : true;
+    });
+  }, [availability]);
+
+  const filteredOutputOptions = useMemo(() => {
+    if (!availability) return outputOptions;
+    return outputOptions.filter(opt => {
+      const avail = availability.find(a => a.name === opt.id && a.type === "output_format");
+      return avail ? avail.isActive : true;
+    });
+  }, [availability]);
 
   const canProceed = useMemo(() => {
     switch (currentStep) {
@@ -122,7 +157,7 @@ export default function GetStarted() {
 
   const handleOutputToggle = (format: OutputFormat) => {
     if (format === "mp4") return;
-    setOutputFormats(prev => 
+    setOutputFormats(prev =>
       prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
     );
   };
@@ -141,6 +176,14 @@ export default function GetStarted() {
     };
     setLocation(`/checkout?config=${encodeURIComponent(JSON.stringify(config))}`);
   };
+
+  if (pricingLoading || availabilityLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
@@ -185,25 +228,22 @@ export default function GetStarted() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {tapeFormatOptions.map((format) => (
+                  {filteredTapeFormatOptions.map((format) => (
                     <Card
                       key={format.id}
-                      className={`cursor-pointer transition-all ${
-                        selectedFormats.includes(format.id)
-                          ? "ring-2 ring-accent border-accent"
-                          : "hover-elevate"
-                      }`}
+                      className={`cursor-pointer transition-all ${selectedFormats.includes(format.id)
+                        ? "ring-2 ring-accent border-accent"
+                        : "hover-elevate"
+                        }`}
                       onClick={() => handleFormatToggle(format.id)}
                       data-testid={`card-format-${format.id}`}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-4">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                            selectedFormats.includes(format.id) ? "bg-accent" : "bg-secondary"
-                          }`}>
-                            <format.icon className={`w-6 h-6 ${
-                              selectedFormats.includes(format.id) ? "text-accent-foreground" : "text-muted-foreground"
-                            }`} />
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedFormats.includes(format.id) ? "bg-accent" : "bg-secondary"
+                            }`}>
+                            <format.icon className={`w-6 h-6 ${selectedFormats.includes(format.id) ? "text-accent-foreground" : "text-muted-foreground"
+                              }`} />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -233,7 +273,7 @@ export default function GetStarted() {
                       <DialogTitle>{t.wizard.step1.helpTitle}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      {tapeFormatOptions.map((format) => (
+                      {filteredTapeFormatOptions.map((format) => (
                         <div key={format.id} className="flex gap-4 p-3 rounded-lg bg-secondary/50">
                           <format.icon className="w-8 h-8 text-muted-foreground flex-shrink-0" />
                           <div>
@@ -344,18 +384,16 @@ export default function GetStarted() {
                   {durationOptions.map((option) => (
                     <Card
                       key={option.value}
-                      className={`cursor-pointer transition-all ${
-                        estimatedHours === option.value
-                          ? "ring-2 ring-accent border-accent"
-                          : "hover-elevate"
-                      }`}
+                      className={`cursor-pointer transition-all ${estimatedHours === option.value
+                        ? "ring-2 ring-accent border-accent"
+                        : "hover-elevate"
+                        }`}
                       onClick={() => setEstimatedHours(option.value)}
                       data-testid={`card-duration-${option.value}`}
                     >
                       <CardContent className="p-4 text-center">
-                        <span className={`font-medium ${
-                          estimatedHours === option.value ? "text-accent" : "text-foreground"
-                        }`}>
+                        <span className={`font-medium ${estimatedHours === option.value ? "text-accent" : "text-foreground"
+                          }`}>
                           {option.label}
                         </span>
                       </CardContent>
@@ -377,25 +415,22 @@ export default function GetStarted() {
                 </div>
 
                 <div className="space-y-3">
-                  {outputOptions.map((option) => (
+                  {filteredOutputOptions.map((option) => (
                     <Card
                       key={option.id}
-                      className={`cursor-pointer transition-all ${
-                        outputFormats.includes(option.id)
-                          ? "ring-2 ring-accent border-accent"
-                          : option.included ? "opacity-100" : "hover-elevate"
-                      }`}
+                      className={`cursor-pointer transition-all ${outputFormats.includes(option.id)
+                        ? "ring-2 ring-accent border-accent"
+                        : option.included ? "opacity-100" : "hover-elevate"
+                        }`}
                       onClick={() => handleOutputToggle(option.id)}
                       data-testid={`card-output-${option.id}`}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                            outputFormats.includes(option.id) ? "bg-accent" : "bg-secondary"
-                          }`}>
-                            <option.icon className={`w-6 h-6 ${
-                              outputFormats.includes(option.id) ? "text-accent-foreground" : "text-muted-foreground"
-                            }`} />
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${outputFormats.includes(option.id) ? "bg-accent" : "bg-secondary"
+                            }`}>
+                            <option.icon className={`w-6 h-6 ${outputFormats.includes(option.id) ? "text-accent-foreground" : "text-muted-foreground"
+                              }`} />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -460,21 +495,18 @@ export default function GetStarted() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Card
-                    className={`cursor-pointer transition-all ${
-                      tapeHandling === "return"
-                        ? "ring-2 ring-accent border-accent"
-                        : "hover-elevate"
-                    }`}
+                    className={`cursor-pointer transition-all ${tapeHandling === "return"
+                      ? "ring-2 ring-accent border-accent"
+                      : "hover-elevate"
+                      }`}
                     onClick={() => setTapeHandling("return")}
                     data-testid="card-handling-return"
                   >
                     <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                        tapeHandling === "return" ? "bg-accent" : "bg-secondary"
-                      }`}>
-                        <Package className={`w-8 h-8 ${
-                          tapeHandling === "return" ? "text-accent-foreground" : "text-muted-foreground"
-                        }`} />
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${tapeHandling === "return" ? "bg-accent" : "bg-secondary"
+                        }`}>
+                        <Package className={`w-8 h-8 ${tapeHandling === "return" ? "text-accent-foreground" : "text-muted-foreground"
+                          }`} />
                       </div>
                       <h3 className="font-semibold text-foreground mb-2">{t.wizard.step5.returnTitle}</h3>
                       <p className="text-sm text-muted-foreground mb-3">
@@ -485,21 +517,18 @@ export default function GetStarted() {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer transition-all ${
-                      tapeHandling === "dispose"
-                        ? "ring-2 ring-accent border-accent"
-                        : "hover-elevate"
-                    }`}
+                    className={`cursor-pointer transition-all ${tapeHandling === "dispose"
+                      ? "ring-2 ring-accent border-accent"
+                      : "hover-elevate"
+                      }`}
                     onClick={() => setTapeHandling("dispose")}
                     data-testid="card-handling-dispose"
                   >
                     <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                        tapeHandling === "dispose" ? "bg-accent" : "bg-secondary"
-                      }`}>
-                        <Recycle className={`w-8 h-8 ${
-                          tapeHandling === "dispose" ? "text-accent-foreground" : "text-muted-foreground"
-                        }`} />
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${tapeHandling === "dispose" ? "bg-accent" : "bg-secondary"
+                        }`}>
+                        <Recycle className={`w-8 h-8 ${tapeHandling === "dispose" ? "text-accent-foreground" : "text-muted-foreground"
+                          }`} />
                       </div>
                       <Badge variant="secondary" className="mb-2">{t.wizard.step5.disposeBadge}</Badge>
                       <h3 className="font-semibold text-foreground mb-2">{t.wizard.step5.disposeTitle}</h3>
@@ -526,21 +555,18 @@ export default function GetStarted() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Card
-                    className={`cursor-pointer transition-all ${
-                      processingSpeed === "standard"
-                        ? "ring-2 ring-accent border-accent"
-                        : "hover-elevate"
-                    }`}
+                    className={`cursor-pointer transition-all ${processingSpeed === "standard"
+                      ? "ring-2 ring-accent border-accent"
+                      : "hover-elevate"
+                      }`}
                     onClick={() => setProcessingSpeed("standard")}
                     data-testid="card-speed-standard"
                   >
                     <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                        processingSpeed === "standard" ? "bg-accent" : "bg-secondary"
-                      }`}>
-                        <Clock className={`w-8 h-8 ${
-                          processingSpeed === "standard" ? "text-accent-foreground" : "text-muted-foreground"
-                        }`} />
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${processingSpeed === "standard" ? "bg-accent" : "bg-secondary"
+                        }`}>
+                        <Clock className={`w-8 h-8 ${processingSpeed === "standard" ? "text-accent-foreground" : "text-muted-foreground"
+                          }`} />
                       </div>
                       <Badge variant="secondary" className="mb-2">{t.wizard.step6.standardBadge}</Badge>
                       <h3 className="font-semibold text-foreground mb-2">{t.wizard.step6.standardTitle}</h3>
@@ -550,21 +576,18 @@ export default function GetStarted() {
                   </Card>
 
                   <Card
-                    className={`cursor-pointer transition-all ${
-                      processingSpeed === "rush"
-                        ? "ring-2 ring-accent border-accent"
-                        : "hover-elevate"
-                    }`}
+                    className={`cursor-pointer transition-all ${processingSpeed === "rush"
+                      ? "ring-2 ring-accent border-accent"
+                      : "hover-elevate"
+                      }`}
                     onClick={() => setProcessingSpeed("rush")}
                     data-testid="card-speed-rush"
                   >
                     <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                        processingSpeed === "rush" ? "bg-accent" : "bg-secondary"
-                      }`}>
-                        <Zap className={`w-8 h-8 ${
-                          processingSpeed === "rush" ? "text-accent-foreground" : "text-muted-foreground"
-                        }`} />
+                      <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${processingSpeed === "rush" ? "bg-accent" : "bg-secondary"
+                        }`}>
+                        <Zap className={`w-8 h-8 ${processingSpeed === "rush" ? "text-accent-foreground" : "text-muted-foreground"
+                          }`} />
                       </div>
                       <Badge className="bg-accent/20 text-accent mb-2">Priorita</Badge>
                       <h3 className="font-semibold text-foreground mb-2">{t.wizard.step6.rushTitle}</h3>
@@ -734,38 +757,38 @@ export default function GetStarted() {
             <Card className="sticky top-24">
               <CardContent className="p-6">
                 <h3 className="font-semibold text-foreground mb-4">{t.wizard.summary.title}</h3>
-                
+
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.wizard.summary.baseCost} ({totalTapes} {t.wizard.summary.tapes})</span>
-                    <span className="text-foreground">{pricing.basePrice.toFixed(2)} EUR</span>
+                    <span className="text-foreground">{dynamicPricing.basePrice.toFixed(2)} EUR</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.wizard.summary.footage} ({estimatedHours} {t.wizard.summary.hours})</span>
-                    <span className="text-foreground">{pricing.hourlyPrice.toFixed(2)} EUR</span>
+                    <span className="text-foreground">{dynamicPricing.hourlyPrice.toFixed(2)} EUR</span>
                   </div>
-                  {pricing.usbPrice > 0 && (
+                  {dynamicPricing.usbPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t.wizard.summary.usbDrive}</span>
-                      <span className="text-foreground">{pricing.usbPrice.toFixed(2)} EUR</span>
+                      <span className="text-foreground">{dynamicPricing.usbPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
-                  {pricing.dvdPrice > 0 && (
+                  {dynamicPricing.dvdPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t.wizard.summary.dvdCopies} ({dvdQuantity} {t.wizard.summary.discs})</span>
-                      <span className="text-foreground">{pricing.dvdPrice.toFixed(2)} EUR</span>
+                      <span className="text-foreground">{dynamicPricing.dvdPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
-                  {pricing.cloudPrice > 0 && (
+                  {dynamicPricing.cloudPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t.wizard.summary.cloudStorage}</span>
-                      <span className="text-foreground">{pricing.cloudPrice.toFixed(2)} EUR</span>
+                      <span className="text-foreground">{dynamicPricing.cloudPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
-                  {pricing.returnPrice > 0 && (
+                  {dynamicPricing.returnPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t.wizard.summary.returnShipping}</span>
-                      <span className="text-foreground">{pricing.returnPrice.toFixed(2)} EUR</span>
+                      <span className="text-foreground">{dynamicPricing.returnPrice.toFixed(2)} EUR</span>
                     </div>
                   )}
                 </div>
@@ -775,12 +798,12 @@ export default function GetStarted() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.wizard.summary.subtotal}</span>
-                    <span className="text-foreground">{pricing.subtotal.toFixed(2)} EUR</span>
+                    <span className="text-foreground">{dynamicPricing.subtotal.toFixed(2)} EUR</span>
                   </div>
-                  {pricing.rushFee > 0 && (
+                  {dynamicPricing.rushFee > 0 && (
                     <div className="flex justify-between text-amber-600">
                       <span>{t.wizard.summary.rushFee} (+50%)</span>
-                      <span>{pricing.rushFee.toFixed(2)} EUR</span>
+                      <span>{dynamicPricing.rushFee.toFixed(2)} EUR</span>
                     </div>
                   )}
                 </div>
@@ -789,7 +812,7 @@ export default function GetStarted() {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span className="text-foreground">{t.wizard.summary.estimatedTotal}</span>
-                  <span className="text-accent">{pricing.total.toFixed(2)} EUR</span>
+                  <span className="text-accent">{dynamicPricing.total.toFixed(2)} EUR</span>
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4 text-center">
