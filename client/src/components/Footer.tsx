@@ -1,108 +1,89 @@
 import { Link } from "wouter";
-import { Film, Mail, Phone, MapPin } from "lucide-react";
+import { Film, Mail, MapPin, Instagram, Facebook } from "lucide-react";
 import { t } from "@/lib/translations";
 
 export function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-accent">
-                <Film className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <span className="text-xl font-semibold" data-testid="text-footer-logo">
-                ReelRevive
+    <footer className="bg-stone-900 text-stone-100 border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20">
+          <div className="space-y-8">
+            <Link href="/" className="flex items-center gap-3">
+              <span className="text-2xl font-display italic tracking-tight">
+                memorieindigitale<span className="text-accent font-sans not-italic font-bold">.it</span>
               </span>
-            </div>
-            <p className="text-sm opacity-80 leading-relaxed">
+            </Link>
+            <p className="text-base text-stone-400 leading-relaxed font-light">
               {t.footer.description}
             </p>
+            <div className="flex gap-6">
+              <Instagram className="w-5 h-5 text-stone-500 hover:text-accent cursor-pointer transition-colors" />
+              <Facebook className="w-5 h-5 text-stone-500 hover:text-accent cursor-pointer transition-colors" />
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">{t.footer.quickLinks}</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-home">
-                  {t.nav.home}
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-pricing">
-                  {t.nav.pricing}
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-about">
-                  {t.nav.about}
-                </Link>
-              </li>
-              <li>
-                <Link href="/get-started" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-get-started">
-                  {t.nav.getStarted}
-                </Link>
-              </li>
+          <div className="space-y-8">
+            <h3 className="font-bold text-sm uppercase tracking-widest text-stone-500">{t.footer.quickLinks}</h3>
+            <ul className="space-y-4">
+              {["home", "pricing", "about", "getStarted"].map((key) => (
+                <li key={key}>
+                  <Link href={key === "home" ? "/" : `/${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`} className="text-base text-stone-300 hover:text-accent transition-colors font-light">
+                    {t.nav[key as keyof typeof t.nav]}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">{t.footer.support}</h3>
-            <ul className="space-y-2">
+          <div className="space-y-8">
+            <h3 className="font-bold text-sm uppercase tracking-widest text-stone-500">{t.footer.support}</h3>
+            <ul className="space-y-4">
               <li>
-                <Link href="/dashboard" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-dashboard">
+                <Link href="/dashboard" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
                   {t.footer.myOrders}
                 </Link>
               </li>
               <li>
-                <a href="#faq" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-faq">
+                <a href="#faq" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
                   {t.footer.faq}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-privacy">
+                <a href="#" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
                   {t.footer.privacy}
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-terms">
-                  {t.footer.terms}
                 </a>
               </li>
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">{t.footer.contactUs}</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 opacity-80" />
-                <a href="mailto:info@reelrevive.it" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-email">
-                  info@reelrevive.it
+          <div className="space-y-8">
+            <h3 className="font-bold text-sm uppercase tracking-widest text-stone-500">{t.footer.contactUs}</h3>
+            <ul className="space-y-6">
+              <li className="flex items-center gap-4 group">
+                <Mail className="w-4 h-4 text-stone-600 group-hover:text-accent transition-colors" />
+                <a href="mailto:hello@memorieindigitale.it" className="text-base text-stone-300 group-hover:text-stone-100 transition-colors font-light">
+                  hello@memorieindigitale.it
                 </a>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 opacity-80" />
-                <a href="tel:+390212345678" className="text-sm opacity-80 hover:opacity-100 transition-opacity" data-testid="link-footer-phone">
-                  +39 02 1234 5678
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 opacity-80 mt-0.5" />
-                <span className="text-sm opacity-80" data-testid="text-footer-address">
-                  Via dei Ricordi 123<br />
-                  Milano, MI 20121
+              <li className="flex items-start gap-4 group">
+                <MapPin className="w-4 h-4 text-stone-600 group-hover:text-accent transition-colors mt-1" />
+                <span className="text-base text-stone-300 font-light">
+                  Basato in Italia. Spedizioni in tutta Europa.
                 </span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 mt-12 pt-8">
-          <p className="text-sm text-center opacity-70" data-testid="text-footer-copyright">
-            {t.footer.copyright}
+        <div className="border-t border-white/5 mt-24 pt-12 flex flex-col md:flex-row justify-between items-center gap-10">
+          <p className="text-sm text-stone-500 font-light tracking-wide italic">
+            © 2024 memorieindigitale.it · Preserviamo la nostalgia con cura.
           </p>
+          <div className="flex gap-10 text-[10px] font-bold uppercase tracking-[0.3em] text-stone-600">
+            <span>Sicuro al 100%</span>
+            <span>Privacy Garantita</span>
+            <span>Assistenza 24/7</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,169 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - ReelRevive Navy/Amber Theme */
-:root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-  --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-  --background: 40 20% 98%;
-  --foreground: 220 30% 12%;
-  --border: 220 15% 85%;
-  --card: 40 15% 96%;
-  --card-foreground: 220 30% 12%;
-  --card-border: 220 12% 90%;
-  --sidebar: 220 45% 18%;
-  --sidebar-foreground: 40 20% 96%;
-  --sidebar-border: 220 40% 22%;
-  --sidebar-primary: 39 80% 56%;
-  --sidebar-primary-foreground: 220 45% 12%;
-  --sidebar-accent: 220 40% 24%;
-  --sidebar-accent-foreground: 40 20% 96%;
-  --sidebar-ring: 39 80% 56%;
-  --popover: 40 15% 96%;
-  --popover-foreground: 220 30% 12%;
-  --popover-border: 220 15% 85%;
-  --primary: 220 45% 20%;
-  --primary-foreground: 40 20% 98%;
-  --secondary: 220 15% 90%;
-  --secondary-foreground: 220 30% 15%;
-  --muted: 220 12% 92%;
-  --muted-foreground: 220 15% 40%;
-  --accent: 39 80% 56%;
-  --accent-foreground: 220 45% 12%;
-  --destructive: 0 75% 42%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 220 18% 65%;
-  --ring: 39 80% 56%;
-  --chart-1: 220 45% 20%;
-  --chart-2: 39 80% 56%;
-  --chart-3: 200 60% 40%;
-  --chart-4: 280 45% 45%;
-  --chart-5: 150 50% 38%;
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: .5rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(220 10% 10% / 0.05);
-  --shadow-xs: 0px 2px 0px 0px hsl(220 10% 10% / 0.06);
-  --shadow-sm: 0px 2px 0px 0px hsl(220 10% 10% / 0.05), 0px 1px 2px -1px hsl(220 10% 10% / 0.08);
-  --shadow: 0px 2px 0px 0px hsl(220 10% 10% / 0.05), 0px 1px 2px -1px hsl(220 10% 10% / 0.08);
-  --shadow-md: 0px 2px 0px 0px hsl(220 10% 10% / 0.05), 0px 2px 4px -1px hsl(220 10% 10% / 0.10);
-  --shadow-lg: 0px 2px 0px 0px hsl(220 10% 10% / 0.05), 0px 4px 6px -1px hsl(220 10% 10% / 0.12);
-  --shadow-xl: 0px 2px 0px 0px hsl(220 10% 10% / 0.05), 0px 8px 10px -1px hsl(220 10% 10% / 0.15);
-  --shadow-2xl: 0px 2px 0px 0px hsl(220 10% 10% / 0.08);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
+@layer base {
+  :root {
+    /* Warm Stone/Amber Light Mode */
+    --background: 34 25% 98%;
+    /* stone-50 / amber-50ish */
+    --foreground: 24 10% 10%;
+    /* stone-800 */
 
-/* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --card: 34 25% 96%;
+    --card-foreground: 24 10% 10%;
+    --card-border: 24 10% 90%;
 
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --popover-border: 214.3 31.8% 91.4%;
 
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --primary: 24 10% 15%;
+    /* Deep Stone */
+    --primary-foreground: 34 25% 98%;
+    --primary-border: 24 10% 20%;
 
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --secondary: 34 25% 94%;
+    /* stone-100 */
+    --secondary-foreground: 24 5% 20%;
+    --secondary-border: 24 10% 85%;
 
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --muted: 30 15% 94%;
+    --muted-foreground: 24 10% 40%;
+    /* Improved from 45% for WCAG compliance */
+    --muted-border: 24 10% 90%;
 
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --accent: 28 80% 45%;
+    /* Vintage Amber */
+    --accent-foreground: 210 40% 98%;
+    --accent-border: 28 80% 50%;
 
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-}
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --destructive-border: 0 84.2% 65%;
 
-/* DARK MODE - ReelRevive Navy/Amber Theme */
-.dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-  --background: 220 30% 8%;
-  --foreground: 40 15% 94%;
-  --border: 220 25% 18%;
-  --card: 220 28% 11%;
-  --card-foreground: 40 15% 94%;
-  --card-border: 220 22% 16%;
-  --sidebar: 220 35% 12%;
-  --sidebar-foreground: 40 15% 94%;
-  --sidebar-border: 220 30% 16%;
-  --sidebar-primary: 39 80% 56%;
-  --sidebar-primary-foreground: 220 35% 10%;
-  --sidebar-accent: 220 30% 18%;
-  --sidebar-accent-foreground: 40 15% 94%;
-  --sidebar-ring: 39 80% 56%;
-  --popover: 220 28% 13%;
-  --popover-foreground: 40 15% 94%;
-  --popover-border: 220 25% 18%;
-  --primary: 220 45% 28%;
-  --primary-foreground: 40 15% 98%;
-  --secondary: 220 22% 18%;
-  --secondary-foreground: 40 15% 92%;
-  --muted: 220 18% 15%;
-  --muted-foreground: 220 12% 60%;
-  --accent: 39 80% 56%;
-  --accent-foreground: 220 35% 10%;
-  --destructive: 0 70% 48%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 220 20% 35%;
-  --ring: 39 80% 56%;
-  --chart-1: 220 55% 55%;
-  --chart-2: 39 80% 60%;
-  --chart-3: 200 55% 55%;
-  --chart-4: 280 45% 60%;
-  --chart-5: 150 45% 55%;
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.20);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.22);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.20), 0px 1px 2px -1px hsl(0 0% 0% / 0.25);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.20), 0px 1px 2px -1px hsl(0 0% 0% / 0.25);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.20), 0px 2px 4px -1px hsl(0 0% 0% / 0.28);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.20), 0px 4px 6px -1px hsl(0 0% 0% / 0.30);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.20), 0px 8px 10px -1px hsl(0 0% 0% / 0.35);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.25);
+    --border: 24 10% 88%;
+    --input: 24 10% 88%;
+    --ring: 28 80% 45%;
 
-/* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --radius: 0.75rem;
 
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    /* Typography */
+    --font-sans: 'Inter', sans-serif;
+    --font-display: 'Cormorant Garamond', serif;
 
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    /* Elevation */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --button-outline: hsl(24 10% 88%);
 
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    /* Sidebar Variables - Dark theme for Administrative area */
+    --sidebar: 24 10% 10%;
+    /* stone-950/900 */
+    /* stone-950/900 */
+    --sidebar-foreground: 24 10% 98%;
+    /* stone-50 */
+    --sidebar-primary: 28 80% 45%;
+    /* amber-600 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 24 10% 15%;
+    /* stone-800 */
+    --sidebar-accent-foreground: 34 25% 98%;
+    --sidebar-border: 24 10% 20%;
+    --sidebar-ring: 28 80% 45%;
+  }
 
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  .dark {
+    /* Keep a sophisticated dark mode, but with warm undertones */
+    --background: 24 10% 10%;
+    --foreground: 34 25% 98%;
 
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --card: 24 10% 12%;
+    --card-foreground: 34 25% 98%;
+    --card-border: 24 10% 15%;
 
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --popover-border: 217.2 32.6% 17.5%;
+
+    --primary: 34 25% 98%;
+    --primary-foreground: 24 10% 10%;
+    --primary-border: 34 25% 90%;
+
+    --secondary: 24 10% 15%;
+    --secondary-foreground: 34 25% 98%;
+    --secondary-border: 24 10% 20%;
+
+    --muted: 24 10% 15%;
+    --muted-foreground: 24 10% 65%;
+    --muted-border: 24 10% 20%;
+
+    --accent: 28 80% 60%;
+    --accent-foreground: 210 40% 98%;
+    --accent-border: 28 80% 65%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --destructive-border: 0 62.8% 35.6%;
+
+    --border: 24 10% 18%;
+    --input: 24 10% 18%;
+    --ring: 28 80% 60%;
+    --button-outline: hsl(24 10% 25%);
+  }
 }
 
 @layer base {
@@ -172,8 +122,60 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-accent/20;
+    /* Subtle warm radial gradient for depth */
+    background: radial-gradient(circle at 50% 0%, hsl(34 25% 98%), hsl(30 15% 96%) 50%, hsl(34 25% 98%));
+    background-attachment: fixed;
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tight text-balance;
+  }
+}
+
+/* 
+  PREMIUM UTILITIES
+  Custom utilities for the Warm Minimalism aesthetic
+*/
+@layer utilities {
+  .glass {
+    @apply bg-background/70 backdrop-blur-xl border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-stone-900/40 backdrop-blur-2xl border border-white/5;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .premium-gradient {
+    @apply bg-gradient-to-br from-stone-100 via-white to-stone-50;
+  }
+
+  .amber-gradient {
+    @apply bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+
+  /* Custom shadow for warm elements */
+  .shadow-warm {
+    box-shadow: 0 20px 25px -5px rgb(41 37 36 / 0.05), 0 8px 10px -6px rgb(41 37 36 / 0.05);
+  }
+}
+
+/* Smooth layout transitions */
+.layout-transition {
+  @apply transition-all duration-700 ease-in-out;
 }
 
 /**
@@ -286,4 +288,74 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}
+
+/* Premium Range Slider Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Track */
+input[type="range"]::-webkit-slider-runnable-track {
+  background: hsl(24 10% 88%);
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-track {
+  background: hsl(24 10% 88%);
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* Thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: hsl(28 80% 45%);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: -7px;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: hsl(28 80% 45%);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.2s ease;
+}
+
+/* Hover state */
+input[type="range"]:hover::-webkit-slider-thumb {
+  background: hsl(28 80% 50%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+  background: hsl(28 80% 50%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+/* Active state */
+input[type="range"]:active::-webkit-slider-thumb {
+  background: hsl(28 80% 40%);
+  transform: scale(1.05);
+}
+
+input[type="range"]:active::-moz-range-thumb {
+  background: hsl(28 80% 40%);
+  transform: scale(1.05);
 }

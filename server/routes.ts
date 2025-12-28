@@ -5,6 +5,7 @@ import { insertUserSchema, insertOrderSchema, insertOrderNoteSchema, orderConfig
 import { z } from "zod";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { isAuthenticated, ensureAdmin } from "./auth";
+import orderMessagesRouter from "./routes/orderMessages";
 
 async function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
   const configs = await storage.getPricingConfigs();
@@ -563,6 +564,9 @@ export async function registerRoutes(
       res.status(500).json({ error: "Failed to fetch pricing configs" });
     }
   });
+
+  // ============ ORDER MESSAGING ROUTES ============
+  app.use("/api", isAuthenticated, orderMessagesRouter);
 
   return httpServer;
 }

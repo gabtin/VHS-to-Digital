@@ -8,213 +8,282 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Settings2, 
-  Truck, 
-  Sparkles, 
+import {
+  Box,
+  Truck,
+  Sparkles,
   Download,
   Shield,
   Star,
-  Clock,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  PlayCircle,
+  Clock,
+  Video
 } from "lucide-react";
 import { t } from "@/lib/translations";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { PricingConfig } from "@shared/schema";
 
-const howItWorksIcons = [Settings2, Truck, Sparkles, Download];
+// Assets moved to public/images
+const heroImage = "/images/hero-setup.png";
+const abstractReels = "/images/abstract-reels.png";
+
+// Premium stock video for hero background
+const heroVideoUrl = "https://player.vimeo.com/external/370331493.sd.mp4?s=33d54839857d45e5a2f5f126da35e39d73d63c4c&profile_id=139&oauth2_token_id=57447761";
 
 export default function Home() {
+  const [tapeCount, setTapeCount] = useState(5);
+
+  // Fetch pricing from database
+  const { data: pricing, isLoading: pricingLoading } = useQuery<PricingConfig[]>({
+    queryKey: ["/api/pricing"],
+  });
+
+  // Get base price per tape from database, fallback to 25 if not loaded
+  const basePricePerTape = pricing?.find(p => p.key === "basePricePerTape")?.value || "25";
+  const pricePerTape = parseFloat(basePricePerTape);
+
   return (
-    <div className="min-h-screen">
-      <section className="relative min-h-[600px] flex items-center bg-gradient-to-br from-primary via-primary to-primary/90 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-          <div className="max-w-3xl">
-            <Badge className="mb-6 bg-accent/20 text-accent border-accent/30" data-testid="badge-hero">
-              {t.hero.badge}
-            </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight mb-6" data-testid="text-hero-title">
-              {t.hero.title}
-            </h1>
-            <p className="text-xl text-primary-foreground/80 mb-8 leading-relaxed max-w-2xl" data-testid="text-hero-subtitle">
-              {t.hero.subtitle}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/get-started">
-                <Button size="lg" className="bg-accent text-accent-foreground text-base px-8" data-testid="button-hero-cta">
-                  {t.hero.cta}
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-              <a href="#how-it-works">
-                <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 text-base px-8" data-testid="button-hero-secondary">
-                  {t.hero.secondary}
-                </Button>
-              </a>
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-accent/10">
+      {/* 
+        HERO SECTION 
+        Softer, warmer, and more professional with Cormorant Garamond
+      */}
+      <section className="relative h-[85vh] flex items-center justify-center overflow-hidden border-b border-stone-200">
+        {/* Video Background with warm overlay - PLACEHOLDER */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-stone-50/80 backdrop-blur-[1px] z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-50 via-transparent to-transparent z-10" />
+
+          {/* Video Placeholder - Replace src with your video URL */}
+          <div className="relative w-full h-full bg-gradient-to-br from-stone-100 via-stone-50 to-amber-50/30">
+            {/* Optional: Uncomment when you have a video */}
+            {/* <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source src="/path-to-your-video.mp4" type="video/mp4" />
+            </video> */}
+
+            {/* Placeholder pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="video-grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="20" cy="20" r="1" fill="currentColor" className="text-stone-400" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#video-grid)" />
+              </svg>
             </div>
           </div>
         </div>
-      </section>
 
-      <section id="how-it-works" className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4" data-testid="text-how-it-works-title">
-              {t.howItWorks.title}
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t.howItWorks.subtitle}
+        <div className="max-w-6xl mx-auto px-6 relative z-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-display font-light text-stone-900 leading-[1.05] tracking-tight mb-8">
+              I Tuoi Ricordi meritano una <span className="italic">Seconda Vita</span>
+            </h1>
+            <p className="text-xl sm:text-2xl text-stone-600 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
+              Converti le tue vecchie videocassette in file digitali cristallini. Preserva i tuoi momenti prima che sbiadiscano.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {t.howItWorks.steps.map((step, i) => {
-              const Icon = howItWorksIcons[i];
-              return (
-                <Card key={i} className="relative overflow-visible" data-testid={`card-step-${i + 1}`}>
-                  <CardContent className="pt-8 pb-6 px-6">
-                    <div className="absolute -top-4 left-6">
-                      <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center shadow-md">
-                        <Icon className="w-6 h-6 text-accent-foreground" />
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="absolute top-4 right-4 text-xs">
-                      {t.howItWorks.step} {i + 1}
-                    </Badge>
-                    <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {step.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link href="/get-started">
+                <Button size="lg" className="rounded-full px-12 h-16 text-lg font-bold shadow-xl hover:scale-105 transition-transform">
+                  Inizia ora
+                </Button>
+              </Link>
+              <a href="#how-it-works">
+                <Button variant="outline" size="lg" className="rounded-full px-10 h-16 text-lg border-stone-300 text-stone-900 hover:bg-white transition-colors">
+                  Scopri di più
+                </Button>
+              </a>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      <section className="py-20 bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4" data-testid="text-trust-title">
-              {t.trust.title}
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t.trust.subtitle}
-            </p>
-          </div>
+      {/* 
+        TRUST BAR 
+      */}
+      <section className="bg-white border-b border-stone-200 py-12">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { value: "50,000+", label: "Cassette Convertite" },
+            { value: "12 Anni", label: "Di Esperienza" },
+            { value: "99.8%", label: "Clienti Soddisfatti" },
+            { value: "100%", label: "Garanzia di Qualità" }
+          ].map((stat, i) => (
+            <div key={i} className="text-center">
+              <div className="text-4xl font-display font-light text-stone-900 mb-1">{stat.value}</div>
+              <div className="text-xs font-bold tracking-[0.2em] uppercase text-stone-400">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {t.trust.stats.map((stat, i) => (
-              <div key={i} className="text-center p-6" data-testid={`stat-${i}`}>
-                <div className="text-3xl sm:text-4xl font-bold text-accent mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+      {/* 
+        HOW IT WORKS 
+        Spacious, icon-driven, organic
+      */}
+      <section id="how-it-works" className="py-24 max-w-6xl mx-auto px-6">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl sm:text-5xl font-display mb-6">Come Funziona</h2>
+          <p className="text-lg text-stone-500 max-w-xl mx-auto font-light">
+            Abbiamo reso tutto semplice. Non serve alcuna competenza tecnica — pensiamo noi a tutto.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+          {[
+            {
+              icon: Box,
+              title: "1. Richiedi il Kit",
+              desc: "Ti invieremo un pacchetto per la spedizione sicura delle tue cassette."
+            },
+            {
+              icon: Video,
+              title: "2. Digitalizziamo con cura",
+              desc: "I nostri tecnici revisionano e convertono ogni nastro in alta qualità."
+            },
+            {
+              icon: Download,
+              title: "3. Scarica e Goditi",
+              desc: "Accedi ai tuoi video online e ricevi indietro le tue cassette originali."
+            }
+          ].map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.2 }}
+              className="text-center"
+            >
+              <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-8 border border-stone-200 text-accent">
+                <step.icon className="w-8 h-8" strokeWidth={2} />
               </div>
-            ))}
-          </div>
+              <h3 className="text-2xl font-display mb-4">{step.title}</h3>
+              <p className="text-stone-500 leading-relaxed font-light">
+                {step.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {t.trust.testimonials.map((testimonial, i) => (
-              <Card key={i} className="hover-elevate" data-testid={`card-testimonial-${i}`}>
-                <CardContent className="p-6">
-                  <div className="flex gap-0.5 mb-4">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="w-4 h-4 fill-accent text-accent" />
-                    ))}
-                  </div>
-                  <p className="text-foreground mb-4 leading-relaxed italic">
-                    "{testimonial.quote}"
-                  </p>
-                  <div>
-                    <div className="font-medium text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.location}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-8 mt-16">
-            {[Shield, Clock, CheckCircle2].map((Icon, i) => (
-              <div key={i} className="flex items-center gap-3 text-muted-foreground">
-                <Icon className="w-5 h-5 text-accent" />
-                <span className="text-sm font-medium">{t.trust.badges[i].label}</span>
-              </div>
-            ))}
+      {/* 
+        TESTIMONIAL 
+        Large blockquote style
+      */}
+      <section className="bg-stone-50 py-32 border-y border-stone-200 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none select-none overflow-hidden flex flex-wrap gap-4 text-9xl font-display rotate-12 items-center justify-center italic">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span key={i}>memoria</span>
+          ))}
+        </div>
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <div className="text-7xl font-display text-accent opacity-30 mb-8 leading-none italic">"</div>
+          <blockquote className="text-3xl sm:text-4xl font-display font-light italic leading-snug text-stone-800 mb-10">
+            Ho trovato i video del matrimonio dei miei genitori del 1978 in soffitta. memorieindigitale.it li ha convertiti magnificamente — mia madre ha pianto quando li ha visti. Non ha prezzo.
+          </blockquote>
+          <div className="text-sm tracking-widest uppercase font-bold text-stone-400 flex items-center justify-center gap-4">
+            <span className="w-8 h-[1px] bg-stone-300" />
+            Sara M. · Milano
+            <span className="w-8 h-[1px] bg-stone-300" />
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 
+        PRICING CARD 
+        Clean, centered
+      */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4" data-testid="text-pricing-preview-title">
-              {t.pricing.previewTitle}
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t.pricing.previewSubtitle}
-            </p>
+            <h2 className="text-4xl sm:text-5xl font-display mb-4">Prezzi Semplici</h2>
+            <p className="text-stone-500 font-light italic">Nessun costo nascosto. Sconto su volumi elevati.</p>
           </div>
 
-          <div className="max-w-lg mx-auto">
-            <Card data-testid="card-pricing-preview">
-              <CardContent className="p-8">
-                <div className="text-center mb-8">
-                  <div className="text-sm text-muted-foreground mb-1">{t.pricing.startingAt}</div>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-5xl font-bold text-foreground">25 EUR</span>
-                    <span className="text-muted-foreground">{t.pricing.perTape}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-2">{t.pricing.perHour}</div>
+          <Card className="bg-stone-50 border-stone-200 shadow-warm rounded-[2rem] p-10 sm:p-16">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-10 mb-12">
+              <div>
+                <div className="text-6xl font-display font-light text-stone-900 mb-2">
+                  €{pricingLoading ? "--" : pricePerTape}<span className="text-xl text-stone-400 font-sans">/cassetta</span>
                 </div>
+                <p className="text-stone-500 font-medium">Conversione standard inclusa</p>
+              </div>
+              <ul className="space-y-3 pt-2">
+                {["Formato MP4 HD", "Link Download Privato", "Ritiro Cassette Incluso"].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm font-semibold text-stone-600">
+                    <CheckCircle2 className="w-4 h-4 text-accent" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-                <ul className="space-y-3 mb-8">
-                  {t.pricing.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <CheckCircle2 className="w-4 h-4 text-accent flex-shrink-0" />
-                      <span className="text-sm text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="border-t border-stone-200 pt-10">
+              <div className="flex justify-between items-center mb-6">
+                <label className="text-sm font-bold uppercase tracking-widest text-stone-500">Quante cassette hai?</label>
+                <div className="text-2xl font-display italic text-stone-900">{tapeCount} Cassette</div>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                value={tapeCount}
+                onChange={(e) => setTapeCount(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-800"
+              />
+              <div className="mt-8 flex justify-between items-center px-6 py-4 bg-white rounded-xl border border-stone-100 shadow-sm">
+                <div className="text-xs font-bold uppercase tracking-widest text-stone-400">Totale Stimato</div>
+                <div className="text-3xl font-display text-accent">€{pricingLoading ? "--" : (tapeCount * pricePerTape).toFixed(2)}</div>
+              </div>
+            </div>
 
-                <div className="flex flex-col gap-3">
-                  <Link href="/get-started">
-                    <Button className="w-full bg-accent text-accent-foreground" data-testid="button-pricing-cta">
-                      {t.pricing.getQuote}
-                    </Button>
-                  </Link>
-                  <Link href="/pricing">
-                    <Button variant="outline" className="w-full" data-testid="button-see-all-pricing">
-                      {t.pricing.seeAll}
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            <Link href="/get-started">
+              <Button className="w-full h-16 rounded-xl text-lg font-bold shadow-xl mt-12 bg-stone-900 hover:bg-stone-800">
+                Inizia il tuo progetto
+              </Button>
+            </Link>
+
+            {tapeCount >= 10 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 text-center text-sm font-bold text-accent bg-accent/5 py-3 rounded-lg border border-accent/10"
+              >
+                ✓ Hai diritto allo sconto volume del 15%!
+              </motion.div>
+            )}
+          </Card>
         </div>
       </section>
 
-      <section id="faq" className="py-20 bg-card">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4" data-testid="text-faq-title">
-              {t.faq.title}
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              {t.faq.subtitle}
-            </p>
-          </div>
+      {/* FAQ SECTION */}
+      <section className="py-24 bg-stone-50 border-t border-stone-200">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-4xl font-display text-center mb-16">Domande Comuni</h2>
 
-          <Accordion type="single" collapsible className="space-y-3" data-testid="accordion-faq">
+          <Accordion type="single" collapsible className="space-y-4">
             {t.faq.items.map((item, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="bg-background rounded-lg border px-6">
-                <AccordionTrigger className="text-left font-medium text-foreground py-4" data-testid={`accordion-trigger-${i}`}>
+              <AccordionItem key={i} value={`item-${i}`} className="bg-white rounded-2xl border-stone-200 px-8 data-[state=open]:shadow-md transition-all shadow-sm">
+                <AccordionTrigger className="text-left font-display text-xl text-stone-900 py-6 hover:no-underline hover:text-accent">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4">
+                <AccordionContent className="text-stone-500 pb-8 text-base leading-relaxed font-light italic">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -223,20 +292,21 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 bg-primary">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-4" data-testid="text-cta-title">
-            {t.cta.title}
+      {/* FINAL CTA */}
+      <section className="py-24 bg-stone-900 relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none grayscale brightness-50">
+          <img src={abstractReels} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-5xl sm:text-7xl font-display text-white mb-10 leading-tight">
+            Preserva la tua storia, <span className="italic text-accent">oggi stesso</span>.
           </h2>
-          <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-            {t.cta.subtitle}
-          </p>
           <Link href="/get-started">
-            <Button size="lg" className="bg-accent text-accent-foreground text-base px-10" data-testid="button-final-cta">
-              {t.cta.button}
-              <ArrowRight className="ml-2 w-4 h-4" />
+            <Button size="lg" className="rounded-full px-16 h-20 text-xl font-bold bg-accent text-white hover:bg-white hover:text-stone-900 shadow-2xl transition-all border-none">
+              Inizia Ora
             </Button>
           </Link>
+          <p className="mt-8 text-stone-400 font-light italic">Spedizione gratuita per ordini superiori a 10 cassette.</p>
         </div>
       </section>
     </div>

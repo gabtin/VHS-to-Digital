@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import type { Order, TapeFormat } from "@shared/schema";
+import { OrderMessagesPanel } from "@/components/messaging/OrderMessagesPanel";
 
 const orderSteps = [
   { id: "pending", label: "Order Placed", icon: FileText, description: "Your order has been confirmed" },
@@ -32,7 +33,7 @@ const orderSteps = [
 
 export default function OrderStatus() {
   const { id } = useParams<{ id: string }>();
-  
+
   const { data: order, isLoading, error } = useQuery<Order>({
     queryKey: ["/api/orders/number", id],
     queryFn: async () => {
@@ -42,7 +43,7 @@ export default function OrderStatus() {
     },
     enabled: !!id,
   });
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -77,7 +78,7 @@ export default function OrderStatus() {
       </div>
     );
   }
-  
+
   const currentStepIndex = orderSteps.findIndex(step => step.id === order.status);
   const isComplete = order.status === "complete";
   const isReadyForDownload = order.status === "ready_for_download" || isComplete;
@@ -98,7 +99,7 @@ export default function OrderStatus() {
                   Order {order.orderNumber}
                 </h1>
                 <Badge className={
-                  isComplete 
+                  isComplete
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-accent/20 text-accent"
                 }>
@@ -127,11 +128,11 @@ export default function OrderStatus() {
             <Card data-testid="card-progress-tracker">
               <CardContent className="p-6">
                 <h2 className="text-lg font-semibold text-foreground mb-6">Order Progress</h2>
-                
+
                 <div className="relative">
                   <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
-                  <div 
-                    className="absolute left-5 top-0 w-0.5 bg-accent transition-all duration-500" 
+                  <div
+                    className="absolute left-5 top-0 w-0.5 bg-accent transition-all duration-500"
                     style={{ height: `${Math.max(0, (currentStepIndex / (orderSteps.length - 1)) * 100)}%` }}
                   />
 
@@ -274,24 +275,7 @@ export default function OrderStatus() {
               </Card>
             )}
 
-            <Card data-testid="card-help">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <HelpCircle className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-foreground mb-1">Need Help?</h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Have questions about your order? We're here to help.
-                    </p>
-                    <a href="mailto:hello@reelrevive.com">
-                      <Button variant="outline" size="sm" data-testid="button-contact-support">
-                        Contact Support
-                      </Button>
-                    </a>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <OrderMessagesPanel orderId={order.id} orderNumber={order.orderNumber} />
           </div>
         </div>
       </div>

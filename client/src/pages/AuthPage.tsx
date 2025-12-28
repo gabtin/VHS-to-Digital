@@ -25,14 +25,14 @@ import { t } from "@/lib/translations";
 
 const loginSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(1, "Password is required"),
+    password: z.string().min(1, "Password obbligatoria"),
 });
 
 const registerSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
+    password: z.string().min(8, "La password deve contenere almeno 8 caratteri"),
+    firstName: z.string().min(1, "Nome obbligatorio"),
+    lastName: z.string().min(1, "Cognome obbligatorio"),
 });
 
 export default function AuthPage() {
@@ -64,7 +64,7 @@ export default function AuthPage() {
                             {t.nav.login}
                         </CardTitle>
                         <CardDescription>
-                            Choose your preferred method to sign in
+                            Scegli il tuo metodo preferito per accedere
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -74,7 +74,7 @@ export default function AuthPage() {
                             onClick={() => window.location.href = "/api/login/google"}
                         >
                             <SiGoogle className="mr-2 h-4 w-4" />
-                            Sign in with Google
+                            Accedi con Google
                         </Button>
 
                         <div className="relative mb-6">
@@ -83,15 +83,15 @@ export default function AuthPage() {
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
                                 <span className="bg-background px-2 text-muted-foreground">
-                                    Or continue with email
+                                    Oppure continua con email
                                 </span>
                             </div>
                         </div>
 
                         <Tabs defaultValue="login">
                             <TabsList className="grid w-full grid-cols-2 mb-4">
-                                <TabsTrigger value="login">Login</TabsTrigger>
-                                <TabsTrigger value="register">Register</TabsTrigger>
+                                <TabsTrigger value="login">Accedi</TabsTrigger>
+                                <TabsTrigger value="register">Registrati</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="login">
@@ -104,7 +104,7 @@ export default function AuthPage() {
                                                 <FormItem>
                                                     <FormLabel>Email</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="name@example.com" {...field} />
+                                                        <Input placeholder="nome@esempio.it" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -120,22 +120,22 @@ export default function AuthPage() {
                                                         <Dialog>
                                                             <DialogTrigger asChild>
                                                                 <Button variant="ghost" className="px-0 font-normal text-xs h-auto underline-offset-4 hover:underline text-primary hover:bg-transparent">
-                                                                    Forgot password?
+                                                                    Password dimenticata?
                                                                 </Button>
                                                             </DialogTrigger>
                                                             <DialogContent>
                                                                 <DialogHeader>
-                                                                    <DialogTitle>Reset Password</DialogTitle>
+                                                                    <DialogTitle>Reimposta Password</DialogTitle>
                                                                     <DialogDescription>
-                                                                        Enter your email address and we'll send you a link to reset your password.
+                                                                        Inserisci il tuo indirizzo email e ti invieremo un link per reimpostare la password.
                                                                     </DialogDescription>
                                                                 </DialogHeader>
                                                                 <div className="py-4">
-                                                                    <Label htmlFor="forgot-email">Email Address</Label>
+                                                                    <Label htmlFor="forgot-email">Indirizzo Email</Label>
                                                                     <Input
                                                                         id="forgot-email"
                                                                         type="email"
-                                                                        placeholder="name@example.com"
+                                                                        placeholder="nome@esempio.it"
                                                                         value={forgotEmail}
                                                                         onChange={(e) => setForgotEmail(e.target.value)}
                                                                     />
@@ -146,7 +146,7 @@ export default function AuthPage() {
                                                                         disabled={forgotPasswordMutation.isPending || !forgotEmail}
                                                                     >
                                                                         {forgotPasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                                        Send Reset Link
+                                                                        Invia Link di Reimpostazione
                                                                     </Button>
                                                                 </DialogFooter>
                                                             </DialogContent>
@@ -161,7 +161,7 @@ export default function AuthPage() {
                                         />
                                         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                                             {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Sign In
+                                            Accedi
                                         </Button>
                                     </form>
                                 </Form>
@@ -176,9 +176,9 @@ export default function AuthPage() {
                                                 name="firstName"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>First Name</FormLabel>
+                                                        <FormLabel>Nome</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="John" {...field} />
+                                                            <Input placeholder="Mario" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -189,9 +189,9 @@ export default function AuthPage() {
                                                 name="lastName"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Last Name</FormLabel>
+                                                        <FormLabel>Cognome</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="Doe" {...field} />
+                                                            <Input placeholder="Rossi" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -205,7 +205,7 @@ export default function AuthPage() {
                                                 <FormItem>
                                                     <FormLabel>Email</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="name@example.com" {...field} />
+                                                        <Input placeholder="nome@esempio.it" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -226,7 +226,7 @@ export default function AuthPage() {
                                         />
                                         <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                                             {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Create Account
+                                            Crea Account
                                         </Button>
                                     </form>
                                 </Form>
@@ -239,19 +239,19 @@ export default function AuthPage() {
             <div className="hidden lg:flex flex-col justify-center p-12 bg-muted">
                 <div className="max-w-lg space-y-6">
                     <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                        Preserve Your Memories for Generations
+                        Preserva i Tuoi Ricordi per le Generazioni Future
                     </h1>
                     <p className="text-lg text-muted-foreground">
-                        ReelRevive helps you digitize your old VHS tapes with premium quality and white-glove service.
+                        memorieindigitale.it ti aiuta a digitalizzare le tue vecchie videocassette VHS con qualità premium e servizio professionale.
                     </p>
                     <div className="grid grid-cols-2 gap-4 pt-8">
                         <div className="space-y-2">
-                            <h4 className="font-semibold">Multiple Formats</h4>
-                            <p className="text-sm text-muted-foreground">VHS, VHS-C, Hi8, and MiniDV support.</p>
+                            <h4 className="font-semibold">Formati Multipli</h4>
+                            <p className="text-sm text-muted-foreground">Supporto per VHS, VHS-C, Hi8 e MiniDV.</p>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="font-semibold">Secure Handling</h4>
-                            <p className="text-sm text-muted-foreground">Full tracking and professional care for your tapes.</p>
+                            <h4 className="font-semibold">Gestione Sicura</h4>
+                            <p className="text-sm text-muted-foreground">Tracciamento completo e cura professionale per le tue cassette.</p>
                         </div>
                     </div>
                 </div>

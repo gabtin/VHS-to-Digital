@@ -143,6 +143,19 @@ export const productAvailability = pgTable("product_availability", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Order messages for customer-admin communication
+export const orderMessages = pgTable("order_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").references(() => orders.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  isAdminMessage: boolean("is_admin_message").default(false).notNull(),
+  emailSent: boolean("email_sent").default(false),
+  emailSentAt: timestamp("email_sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
@@ -154,6 +167,18 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     references: [users.id],
   }),
   notes: many(orderNotes),
+  messages: many(orderMessages),
+}));
+
+export const orderMessagesRelations = relations(orderMessages, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderMessages.orderId],
+    references: [orders.id],
+  }),
+  user: one(users, {
+    fields: [orderMessages.userId],
+    references: [users.id],
+  }),
 }));
 
 export const orderNotesRelations = relations(orderNotes, ({ one }) => ({
@@ -195,6 +220,14 @@ export const insertProductAvailabilitySchema = createInsertSchema(productAvailab
   updatedAt: true,
 });
 
+export const insertOrderMessageSchema = createInsertSchema(orderMessages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  emailSent: true,
+  emailSentAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -210,6 +243,9 @@ export type InsertPricingConfig = z.infer<typeof insertPricingConfigSchema>;
 
 export type ProductAvailability = typeof productAvailability.$inferSelect;
 export type InsertProductAvailability = z.infer<typeof insertProductAvailabilitySchema>;
+
+export type OrderMessage = typeof orderMessages.$inferSelect;
+export type InsertOrderMessage = z.infer<typeof insertOrderMessageSchema>;
 
 // Order configuration type for the wizard
 export const orderConfigSchema = z.object({

@@ -2,8 +2,8 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/use-auth";
-import { Sun, Moon, Menu, X, Film, LogOut, User, Mail } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Film, LogOut, User, Mail, ChevronDown, Shield, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,256 +11,259 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { t } from "@/lib/translations";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
-  const [location] = useLocation();
-  const { theme, toggleTheme } = useTheme();
-  const { user, isLoading, isAuthenticated, logout, resendVerificationMutation } = useAuth();
+  const { user, logout, resendVerificationMutation } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [location] = useLocation();
 
-  const navLinks = [
-    { href: "/", label: t.nav.home },
-    { href: "/pricing", label: t.nav.pricing },
-    { href: "/about", label: t.nav.about },
-    { href: "/get-started", label: t.nav.getStarted },
-  ];
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const isActive = (path: string) => {
-    if (path === "/" && location === "/") return true;
-    if (path !== "/" && location.startsWith(path)) return true;
-    return false;
-  };
+  const isAdmin = user?.isAdmin;
+  const isActive = (path: string) => location === path;
 
-  const getInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user?.name) {
-      return user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-    }
-    if (user?.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "U";
-  };
-
-  const getDisplayName = () => {
-    if (user?.firstName) {
-      return user.firstName;
-    }
-    if (user?.name) {
-      return user.name.split(" ")[0];
-    }
-    return user?.email?.split("@")[0] || "Utente";
-  };
+  const isDarkHero = location === "/about";
 
   return (
-    <>
-      {user && !user.emailVerified && !user.oidcId && (
-        <div className="bg-primary/10 border-b border-primary/20 py-2 px-4 flex items-center justify-center gap-4 text-sm font-medium animate-in fade-in slide-in-from-top-4 duration-500">
-          <span className="text-secondary-foreground flex items-center gap-2">
-            <Mail className="w-4 h-4 text-primary" />
-            Il tuo indirizzo email non è ancora verificato.
-          </span>
-          <Button
-            variant="link"
-            className="h-auto p-0 text-primary hover:text-primary/80 underline font-semibold"
-            disabled={resendVerificationMutation.isPending}
-            onClick={() => resendVerificationMutation.mutate()}
-          >
-            {resendVerificationMutation.isPending ? "Invio in corso..." : "Invia di nuovo il link"}
-          </Button>
-        </div>
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-stone-200 py-3"
+          : "bg-transparent py-5"
       )}
-      <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-accent">
-                <Film className="w-5 h-5 text-accent-foreground" />
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-12">
+          {/* Logo Section */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground group-hover:scale-110 transition-transform duration-300">
+                <Film className="w-5 h-5" />
               </div>
-              <span className="text-xl font-semibold text-foreground tracking-tight" data-testid="text-logo">
-                ReelRevive
+              <span className={cn(
+                "text-xl font-display italic tracking-tight transition-colors",
+                !isScrolled && isDarkHero ? "text-white" : "text-foreground"
+              )}>
+                memorieindigitale<span className="text-accent font-sans not-italic font-bold">.it</span>
               </span>
             </Link>
+          </div>
 
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "font-medium",
-                      isActive(link.href) && "bg-secondary"
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-10">
+            <Link href="/" className={cn(
+              "text-[15px] font-medium transition-colors",
+              isActive("/") ? "text-accent" : (
+                !isScrolled && isDarkHero
+                  ? "text-white/80 hover:text-white"
+                  : "text-stone-600 hover:text-stone-900"
+              )
+            )}>
+              {t.nav.home}
+            </Link>
+            <Link href="/pricing" className={cn(
+              "text-[15px] font-medium transition-colors",
+              isActive("/pricing") ? "text-accent" : (
+                !isScrolled && isDarkHero
+                  ? "text-white/80 hover:text-white"
+                  : "text-stone-600 hover:text-stone-900"
+              )
+            )}>
+              {t.nav.pricing}
+            </Link>
+            <Link href="/about" className={cn(
+              "text-[15px] font-medium transition-colors",
+              isActive("/about") ? "text-accent" : (
+                !isScrolled && isDarkHero
+                  ? "text-white/80 hover:text-white"
+                  : "text-stone-600 hover:text-stone-900"
+              )
+            )}>
+              {t.nav.about}
+            </Link>
+
+
+            <div className="flex items-center gap-4">
+
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className={cn(
+                      "flex items-center gap-2 px-3 h-10 rounded-full transition-all border border-transparent",
+                      isScrolled
+                        ? "hover:bg-stone-100 hover:border-stone-200"
+                        : (isDarkHero ? "hover:bg-white/10 text-white" : "hover:bg-stone-100 hover:border-stone-200 text-stone-900")
+                    )}>
+                      <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
+                        {user.firstName ? user.firstName[0] : (user.email ? user.email[0].toUpperCase() : 'U')}
+                      </div>
+                      <span className="text-sm font-semibold">{user.firstName || (user.email ? user.email.split('@')[0] : 'User')}</span>
+                      <ChevronDown className="w-4 h-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2 p-2 rounded-2xl shadow-xl border-stone-200 overflow-hidden">
+                    <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
+                      <Link href="/dashboard" className="flex items-center gap-3 cursor-pointer">
+                        <ShoppingCart className="w-4 h-4 opacity-70" />
+                        <span className="font-medium">{t.nav.dashboard}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
+                      <Link href="/profile" className="flex items-center gap-3 cursor-pointer">
+                        <User className="w-4 h-4 opacity-70" />
+                        <span className="font-medium">{t.nav.profile}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
+                        <Link href="/admin" className="flex items-center gap-3 cursor-pointer">
+                          <Shield className="w-4 h-4 text-accent" />
+                          <span className="font-medium">{t.nav.adminPanel}</span>
+                        </Link>
+                      </DropdownMenuItem>
                     )}
-                    data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    {link.label}
+                    <DropdownMenuSeparator className="my-1 bg-stone-100" />
+                    <DropdownMenuItem
+                      className="rounded-xl p-3 text-destructive focus:bg-destructive/5 cursor-pointer"
+                      onClick={() => logout()}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LogOut className="w-4 h-4" />
+                        <span className="font-medium">{t.nav.logout}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/auth">
+                  <Button className="rounded-full px-6 h-10 font-bold tracking-tight shadow-md hover:shadow-lg transition-all">
+                    {t.nav.login}
                   </Button>
                 </Link>
-              ))}
+              )}
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                data-testid="button-theme-toggle"
-              >
-                {theme === "light" ? (
-                  <Moon className="w-4 h-4" />
-                ) : (
-                  <Sun className="w-4 h-4" />
-                )}
-              </Button>
-
-              <div className="hidden md:flex items-center gap-2">
-                {isLoading ? (
-                  <div className="w-20 h-8 bg-muted rounded animate-pulse" />
-                ) : isAuthenticated && user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center gap-2" data-testid="button-user-menu">
-                        <Avatar className="w-7 h-7">
-                          <AvatarImage src={user.profileImageUrl || undefined} />
-                          <AvatarFallback className="bg-accent text-accent-foreground text-xs">
-                            {getInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{getDisplayName()}</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <Link href="/dashboard">
-                        <DropdownMenuItem data-testid="link-dashboard">
-                          <User className="w-4 h-4 mr-2" />
-                          {t.nav.dashboard}
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/profile">
-                        <DropdownMenuItem data-testid="link-profile">
-                          <User className="w-4 h-4 mr-2" />
-                          {t.nav.profile}
-                        </DropdownMenuItem>
-                      </Link>
-                      {user.isAdmin && (
-                        <Link href="/admin">
-                          <DropdownMenuItem data-testid="link-admin">
-                            {t.nav.adminPanel}
-                          </DropdownMenuItem>
-                        </Link>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => logout()} data-testid="button-logout">
-                        <LogOut className="w-4 h-4 mr-2" />
-                        {t.nav.logout}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <>
-                    <Link href="/auth">
-                      <Button variant="outline" size="sm" data-testid="button-login">
-                        {t.nav.login}
-                      </Button>
-                    </Link>
-                    <Link href="/get-started">
-                      <Button size="sm" className="bg-accent text-accent-foreground" data-testid="button-cta-header">
-                        {t.nav.startOrder}
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                data-testid="button-mobile-menu"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
-            </div>
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "rounded-full w-10 h-10",
+                !isScrolled && isDarkHero && !mobileMenuOpen ? "text-white hover:bg-white/10" : ""
+              )}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
           </div>
         </div>
+      </div>
 
+      {/* Verification Banner */}
+      {user && !user.emailVerified && !mobileMenuOpen && (
+        <div className="bg-amber-50 border-y border-amber-100 py-3">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-3 text-sm font-medium text-amber-900 text-center">
+            <span className="flex items-center gap-2 italic">
+              <Mail className="w-4 h-4 text-amber-600" />
+              Il tuo indirizzo email non è ancora verificato.
+            </span>
+            <Button
+              variant="ghost"
+              className="h-auto p-0 text-amber-700 hover:text-amber-900 underline font-bold"
+              disabled={resendVerificationMutation.isPending}
+              onClick={() => resendVerificationMutation.mutate()}
+            >
+              Invia nuovamente il link
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-border">
-            <div className="flex flex-col gap-1 pt-4">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start",
-                      isActive(link.href) && "bg-secondary"
-                    )}
-                    data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-background border-b border-stone-100 overflow-hidden"
+          >
+            <div className="px-6 py-8 space-y-6">
+              <Link
+                href="/"
+                className="block text-xl font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t.nav.home}
+              </Link>
+              <Link
+                href="/pricing"
+                className="block text-xl font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t.nav.pricing}
+              </Link>
+              <Link
+                href="/about"
+                className="block text-xl font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t.nav.about}
+              </Link>
+              <div className="h-[1px] bg-stone-100" />
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-4 text-xl font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    {link.label}
+                    <ShoppingCart className="w-5 h-5 opacity-70" />
+                    {t.nav.dashboard}
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-4 text-xl font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="w-5 h-5 opacity-70" />
+                    {t.nav.profile}
+                  </Link>
+                  <button
+                    className="flex items-center gap-4 text-xl font-medium text-destructive"
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-5 h-5" />
+                    {t.nav.logout}
+                  </button>
+                </>
+              ) : (
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full h-14 rounded-2xl text-lg font-bold">
+                    {t.nav.login}
                   </Button>
                 </Link>
-              ))}
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="flex items-center gap-2 px-4 py-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={user.profileImageUrl || undefined} />
-                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">{getDisplayName()}</span>
-                    </div>
-                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full" data-testid="link-mobile-dashboard">
-                        {t.nav.dashboard}
-                      </Button>
-                    </Link>
-                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full" data-testid="link-mobile-profile">
-                        {t.nav.profile}
-                      </Button>
-                    </Link>
-                    {user.isAdmin && (
-                      <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full" data-testid="link-mobile-admin">
-                          {t.nav.adminPanel}
-                        </Button>
-                      </Link>
-                    )}
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => logout()} data-testid="button-mobile-logout">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {t.nav.logout}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full" data-testid="button-mobile-login">
-                        {t.nav.login}
-                      </Button>
-                    </Link>
-                    <Link href="/get-started" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full bg-accent text-accent-foreground" data-testid="button-mobile-cta">
-                        {t.nav.startOrder}
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
+              )}
             </div>
-          </div>
+          </motion.div>
         )}
-      </nav>
-    </>
+      </AnimatePresence>
+    </nav>
   );
 }

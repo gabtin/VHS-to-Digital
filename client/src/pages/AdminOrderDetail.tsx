@@ -41,6 +41,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, OrderNote, TapeFormat } from "@shared/schema";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { AdminOrderMessagesPanel } from "@/components/messaging/AdminOrderMessagesPanel";
 
 const statusOptions = [
   { value: "pending", label: "Pending" },
@@ -329,6 +330,12 @@ export default function AdminOrderDetail() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <AdminOrderMessagesPanel
+                  orderId={order.id}
+                  orderNumber={order.orderNumber}
+                  customerName={order.shippingName}
+                />
               </div>
 
               <div className="space-y-6">

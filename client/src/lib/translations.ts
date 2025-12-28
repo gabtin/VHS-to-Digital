@@ -46,7 +46,7 @@ export const t = {
 
   trust: {
     title: "Scelto dalle Famiglie Italiane",
-    subtitle: "Unisciti a migliaia di persone che hanno preservato i loro preziosi ricordi con ReelRevive",
+    subtitle: "Unisciti a migliaia di persone che hanno preservato i loro preziosi ricordi con memorieindigitale.it",
     stats: [
       { value: "50.000+", label: "Cassette Convertite" },
       { value: "15.000+", label: "Clienti Soddisfatti" },
@@ -57,7 +57,7 @@ export const t = {
       {
         name: "Maria R.",
         location: "Milano, Italia",
-        quote: "Ho trovato cassette di mia nonna che non vedevo da 30 anni. ReelRevive l'ha riportata in vita per tutta la mia famiglia.",
+        quote: "Ho trovato cassette di mia nonna che non vedevo da 30 anni. memorieindigitale.it l'ha riportata in vita per tutta la mia famiglia.",
       },
       {
         name: "Giuseppe T.",
@@ -355,7 +355,7 @@ export const t = {
     goToDashboard: "Vai alla Dashboard",
     afterPrint: "Dopo aver stampato l'etichetta, porta il pacco all'ufficio postale piu vicino.",
     backToDashboard: "Torna alla Dashboard",
-    thankYou: "Grazie per aver scelto ReelRevive!",
+    thankYou: "Grazie per aver scelto memorieindigitale.it!",
     support: "Per assistenza",
     instructionSteps: [
       "Stampa questa etichetta",
@@ -371,27 +371,85 @@ export const t = {
     support: "Supporto",
     myOrders: "I Miei Ordini",
     faq: "FAQ",
-    privacy: "Privacy Policy",
+    privacy: "Informativa sulla Privacy",
     terms: "Termini di Servizio",
     contactUs: "Contattaci",
-    copyright: "2024 ReelRevive. Tutti i diritti riservati. I tuoi ricordi, digitalizzati con cura.",
+    copyright: "2024 memorieindigitale.it. Tutti i diritti riservati. I tuoi ricordi, digitalizzati con cura.",
     address: "Via dei Ricordi 123\nMilano, MI 20121",
   },
 
   about: {
-    heroTitle: "Chi Siamo",
-    heroSubtitle: "Una passione per preservare i ricordi delle famiglie italiane",
-    missionTitle: "La Nostra Missione",
-    missionText: "Crediamo che ogni famiglia meriti di preservare i propri ricordi per le generazioni future. Le videocassette si deteriorano con il tempo, ma i ricordi che contengono sono impagabili. La nostra missione e convertire questi fragili supporti analogici in file digitali duraturi.",
-    whyTitle: "Perche Sceglierci",
-    whyItems: [
-      { title: "Qualita Professionale", description: "Utilizziamo attrezzature di alta gamma per garantire la migliore qualita possibile" },
-      { title: "Servizio Italiano", description: "Team italiano, assistenza in italiano, spedizione in tutta Italia" },
-      { title: "Sicurezza Garantita", description: "Le tue cassette sono trattate con la massima cura e tracciamo ogni passo" },
-      { title: "Prezzi Onesti", description: "Nessun costo nascosto, paghi solo per il filmato effettivo" },
+    heroTitle: "Informazioni su ReelRevive",
+    heroSubtitle: "La nostra missione è preservare i preziosi ricordi di famiglia prima che svaniscano per sempre.",
+    storyTitle: "La Nostra Storia",
+    storyParagraphs: [
+      "ReelRevive è nata da un'esperienza personale. Nel 2018, il nostro fondatore ha scoperto scatole di videocassette VHS nella soffitta di sua nonna dopo la sua scomparsa. Queste cassette contenevano decenni di storia familiare: compleanni, vacanze, momenti quotidiani che non erano mai stati convertiti in digitale.",
+      "Correndo contro il tempo per preservare questi ricordi prima che le cassette si deteriorassero ulteriormente, ha scoperto che le opzioni esistenti erano troppo costose, troppo lente o non trattavano le cassette con la cura che meritavano.",
+      "È allora che è nata ReelRevive. Crediamo che tutti meritino l'accesso a una digitalizzazione di qualità professionale a prezzi equi, con il tipo di cura e attenzione che riserveresti ai ricordi della tua stessa famiglia."
     ],
-    teamTitle: "Il Nostro Team",
-    teamSubtitle: "Professionisti appassionati al servizio dei tuoi ricordi",
+    missionTitle: "La Nostra Missione",
+    missionText: "Preservare e celebrare i ricordi di famiglia rendendo la digitalizzazione professionale delle VHS accessibile a tutti.",
+    values: [
+      { title: "Cura", description: "Trattiamo ogni cassetta come se contenesse i nostri ricordi di famiglia." },
+      { title: "Qualità", description: "Non scendiamo a compromessi. Ogni trasferimento soddisfa i nostri elevati standard." },
+      { title: "Fiducia", description: "Prezzi trasparenti, comunicazione chiara e servizio onesto." }
+    ],
+    processTitle: "Il Nostro Processo",
+    processSubtitle: "Ogni cassetta passa attraverso il nostro meticoloso processo di digitalizzazione in quattro fasi",
+    processSteps: [
+      {
+        title: "Ispezione e Pulizia",
+        description: "Ogni cassetta viene sottoposta a un'ispezione approfondita. Puliamo testine e alloggiamenti, ripariamo piccoli danni e valutiamo le condizioni del nastro prima della digitalizzazione."
+      },
+      {
+        title: "Riproduzione Professionale",
+        description: "Utilizziamo videoregistratori di qualità broadcast mantenuti secondo le specifiche di fabbrica. Ogmi formato ha apparecchiature dedicate ottimizzate per la migliore riproduzione."
+      },
+      {
+        title: "Cattura Digitale ad Alta Risoluzione",
+        description: "I tuoi filmati vengono catturati utilizzando hardware di acquisizione video professionale alla massima qualità consentita dal materiale sorgente."
+      },
+      {
+        title: "Revisione Qualità e Miglioramento",
+        description: "I nostri tecnici revisionano ogni trasferimento, applicando correzione del colore e miglioramenti necessari per far risaltare il meglio dai tuoi filmati."
+      }
+    ],
+    equipmentTitle: "Attrezzatura Professionale",
+    equipmentIntro: "La qualità inizia con i giusti strumenti. Investiamo in attrezzature di livello broadcast che la maggior parte dei servizi consumer non può eguagliare:",
+    equipmentList: [
+      "Deck professionali S-VHS JVC SR-V101",
+      "Deck Master Digitali Sony DSR-1500",
+      "Schede di acquisizione Blackmagic Intensity Pro 4K",
+      "TBC (Time Base Correctors) per una riproduzione stabile",
+      "Stazione professionale di pulizia e riparazione"
+    ],
+    equipmentOutro: "Questa attrezzatura ci consente di estrarre la massima qualità possibile dalle tue cassette, anche quelle con problemi di tracking o piccoli danni.",
+    stats: {
+      recoveryRate: "99.8%",
+      recoveryLabel: "Tasso di Recupero",
+      recoveryDescription: "Anche cassette che altri hanno dato per perse. I nostri tecnici hanno oltre 50 anni di esperienza combinata."
+    },
+    securityTitle: "Sicurezza e Privacy",
+    securitySubtitle: "I tuoi ricordi sono preziosi. Li trattiamo con la sicurezza che meritano.",
+    securityFeatures: [
+      {
+        title: "Struttura Sicura",
+        description: "La nostra struttura dispone di monitoraggio 24/7, accesso controllato e stoccaggio a temperatura controllata per le tue cassette."
+      },
+      {
+        title: "Crittografia dei Dati",
+        description: "Tutti i file digitali sono archiviati su server crittografati. I tuoi link di download sono sicuri e limitati nel tempo."
+      },
+      {
+        title: "Personale Verificato",
+        description: "Ogni membro del team è stato sottoposto a controlli approfonditi. I tuoi ricordi sono in mani fidate."
+      }
+    ],
+    securityCTA: "Hai domande sulle nostre pratiche di sicurezza? Siamo felici di spiegartele.",
+    securityButton: "Contatta il Team di Sicurezza",
+    ctaTitle: "Pronto a Preservare i Tuoi Ricordi?",
+    ctaSubtitle: "Unisciti a migliaia di famiglie che ci hanno affidato i loro momenti preziosi.",
+    ctaButton: "Inizia Oggi"
   },
 
   formats: {

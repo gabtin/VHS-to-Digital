@@ -87,25 +87,22 @@ export default function Pricing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {tapeFormats.map((format) => (
               <Card
                 key={format.id}
-                className="relative hover-elevate transition-shadow"
+                className={`relative transition-all hover:shadow-warm ${format.popular ? 'border-accent/30 bg-accent/5' : 'border-stone-200'}`}
                 data-testid={`card-format-${format.id}`}
               >
-                <CardContent className="p-6 text-center">
+                <CardContent className="p-6 text-center flex flex-col items-center justify-start min-h-[160px]">
                   {format.popular && (
-                    <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground text-xs">
+                    <Badge className="mb-4 bg-accent text-white text-xs font-bold px-3 py-1">
                       {t.common.popular}
                     </Badge>
                   )}
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary flex items-center justify-center">
-                    <format.icon className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-1">{format.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{format.era}</p>
-                  <p className="text-xs text-muted-foreground">{format.description}</p>
+                  <h3 className="font-display text-2xl text-foreground mb-2 mt-auto">{format.name}</h3>
+                  <p className="text-xs text-stone-500 font-medium mb-1">{format.era}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{format.description}</p>
                 </CardContent>
               </Card>
             ))}
