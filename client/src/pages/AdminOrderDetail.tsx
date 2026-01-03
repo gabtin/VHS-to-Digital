@@ -35,7 +35,10 @@ import {
   Clock,
   Zap,
   Save,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Loader2,
+  FileCheck
 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -73,6 +76,8 @@ export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [newNote, setNewNote] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: order, isLoading: orderLoading } = useQuery<Order>({
     queryKey: ["/api/orders", id],
@@ -96,17 +101,17 @@ export default function AdminOrderDetail() {
 
   const [status, setStatus] = useState<string>("");
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async (newStatus: string) => {
-      return apiRequest("PATCH", `/api/orders/${id}`, { status: newStatus });
+  const updateOrderMutation = useMutation({
+    mutationFn: async (data: Partial<Order>) => {
+      return apiRequest("PATCH", `/api/orders/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      toast({ title: "Status updated successfully" });
+      toast({ title: "Order updated successfully" });
     },
     onError: () => {
-      toast({ title: "Failed to update status", variant: "destructive" });
+      toast({ title: "Failed to update order", variant: "destructive" });
     },
   });
 
@@ -123,6 +128,36 @@ export default function AdminOrderDetail() {
       toast({ title: "Failed to add note", variant: "destructive" });
     },
   });
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Upload failed");
+      }
+
+      toast({ title: "File uploaded successfully", description: "Google Drive link generated and customer notified." });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders", id] });
+    } catch (error: any) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+      // Reset input
+      event.target.value = "";
+    }
+  };
 
   const sidebarStyle = {
     "--sidebar-width": "16rem",
@@ -223,14 +258,87 @@ export default function AdminOrderDetail() {
                       </Select>
                       <Button
                         className="bg-accent text-accent-foreground"
-                        onClick={() => updateStatusMutation.mutate(status || order.status)}
-                        disabled={updateStatusMutation.isPending || !status || status === order.status}
+                        onClick={() => updateOrderMutation.mutate({ status: status || order.status })}
+                        disabled={updateOrderMutation.isPending || (status === order.status && !status)}
                         data-testid="button-save-status"
                       >
                         <Save className="w-4 h-4 mr-2" />
-                        {updateStatusMutation.isPending ? "Saving..." : "Save Status"}
+                        {updateOrderMutation.isPending ? "Saving..." : "Save Status"}
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-digital-delivery">
+                  <CardHeader>
+                    <CardTitle>Digital Delivery</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 border-2 border-dashed border-accent/20 rounded-xl bg-accent/5 flex flex-col items-center justify-center space-y-3 transition-colors hover:border-accent/40">
+                      <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                        {isUploading ? <Loader2 className="w-6 h-6 text-accent animate-spin" /> : <Upload className="w-6 h-6 text-accent" />}
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-foreground">Carica File Digitalizzato</p>
+                        <p className="text-xs text-muted-foreground mt-1">MP4, MOV o altri formati video</p>
+                      </div>
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleFileUpload}
+                          disabled={isUploading}
+                          accept="video/*"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isUploading}
+                          asChild
+                        >
+                          <span>{isUploading ? "Caricamento..." : "Seleziona File"}</span>
+                        </Button>
+                      </label>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground font-bold tracking-widest">
+                          Oppure Inserisci Link Manuale
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Download URL</label>
+                      <div className="flex gap-4">
+                        <Textarea
+                          placeholder="Esempio: https://drive.google.com/..."
+                          value={downloadUrl || order.downloadUrl || ""}
+                          onChange={(e) => setDownloadUrl(e.target.value)}
+                          className="flex-1"
+                          rows={1}
+                        />
+                        <Button
+                          onClick={() => updateOrderMutation.mutate({ downloadUrl: downloadUrl })}
+                          disabled={updateOrderMutation.isPending || !downloadUrl || downloadUrl === order.downloadUrl}
+                        >
+                          Save Link
+                        </Button>
+                      </div>
+                    </div>
+                    {order.downloadUrl && (
+                      <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <FileCheck className="w-4 h-4 text-green-600 shrink-0" />
+                          <span className="text-xs text-green-700 dark:text-green-400 truncate">{order.downloadUrl}</span>
+                        </div>
+                        <a href={order.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-accent hover:underline shrink-0">Test Link</a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

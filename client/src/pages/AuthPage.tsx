@@ -36,12 +36,15 @@ const registerSchema = z.object({
 });
 
 export default function AuthPage() {
-    const [, setLocation] = useLocation();
+    const [location, setLocation] = useLocation();
     const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
     const [forgotEmail, setForgotEmail] = useState("");
 
+    const params = new URLSearchParams(window.location.search);
+    const redirectPath = params.get("redirect") || "/";
+
     if (user) {
-        setLocation("/");
+        setLocation(redirectPath);
         return null;
     }
 
@@ -230,6 +233,9 @@ export default function AuthPage() {
                                         </Button>
                                     </form>
                                 </Form>
+                                <p className="text-xs text-center text-muted-foreground mt-4">
+                                    Nota: Dopo la registrazione sarai reindirizzato al tuo ordine.
+                                </p>
                             </TabsContent>
                         </Tabs>
                     </CardContent>

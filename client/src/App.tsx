@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Pricing from "@/pages/Pricing";
@@ -25,7 +27,10 @@ import AuthPage from "@/pages/AuthPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 import { useAuth } from "@/hooks/use-auth";
+import { CartProvider } from "@/hooks/use-cart";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 
@@ -53,7 +58,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Redirect to="/auth" />;
+    const currentPath = window.location.pathname + window.location.search;
+    return <Redirect to={`/auth?redirect=${encodeURIComponent(currentPath)}`} />;
   }
 
   return <>{children}</>;
@@ -80,6 +86,16 @@ function Router() {
       <Route path="/get-started">
         <CustomerLayout>
           <GetStarted />
+        </CustomerLayout>
+      </Route>
+      <Route path="/terms">
+        <CustomerLayout>
+          <Terms />
+        </CustomerLayout>
+      </Route>
+      <Route path="/privacy">
+        <CustomerLayout>
+          <Privacy />
         </CustomerLayout>
       </Route>
       <Route path="/auth" component={AuthPage} />
@@ -142,14 +158,19 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <CartProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <CookieBanner />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
+        </CartProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -105,7 +105,12 @@ export const orders = pgTable("orders", {
   // Payment
   stripeSessionId: text("stripe_session_id").unique(),
 
-  // Tracking
+  // Tracking and Shipping
+  shippingProvider: text("shipping_provider"), // e.g. Packlink or specific carrier
+  shippingServiceId: text("shipping_service_id"), // ID from Packlink
+  shippingReference: text("shipping_reference"), // Packlink Shipment Reference
+  shippingDropoffId: text("shipping_dropoff_id"), // Selected dropoff point ID
+  shippingLabelUrl: text("shipping_label_url"),
   trackingNumber: text("tracking_number"),
   downloadUrl: text("download_url"),
 
@@ -139,6 +144,9 @@ export const productAvailability = pgTable("product_availability", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   type: text("type", { enum: ["tape_format", "output_format"] }).notNull(),
   name: text("name").notNull(), // e.g., 'vhs', 'usb'
+  label: text("label"), // Display name
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }),
   isActive: boolean("is_active").default(true).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -249,10 +257,10 @@ export type InsertOrderMessage = z.infer<typeof insertOrderMessageSchema>;
 
 // Order configuration type for the wizard
 export const orderConfigSchema = z.object({
-  tapeFormats: z.record(z.enum(tapeFormats), z.number().min(0)).default({}),
+  tapeFormats: z.record(z.string(), z.number().min(0)).default({}),
   totalTapes: z.number().min(1),
   estimatedHours: z.number().min(1),
-  outputFormats: z.array(z.enum(outputFormats)).min(1),
+  outputFormats: z.array(z.string()).min(1),
   dvdQuantity: z.number().min(0).optional(),
   tapeHandling: z.enum(tapeHandlingOptions),
   processingSpeed: z.enum(processingSpeedOptions),

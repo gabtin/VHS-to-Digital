@@ -8,8 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { Loader2, Save, RefreshCw } from "lucide-react";
+import { Loader2, Save, RefreshCw, Plus, Trash2 } from "lucide-react";
 import type { PricingConfig, ProductAvailability } from "@shared/schema";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminSettings() {
     const { toast } = useToast();
@@ -36,13 +39,43 @@ export default function AdminSettings() {
     });
 
     const updateAvailabilityMutation = useMutation({
-        mutationFn: async ({ name, isActive }: { name: string; isActive: boolean }) => {
-            await apiRequest("PATCH", `/api/admin/availability/${name}`, { isActive });
+        mutationFn: async ({ name, data }: { name: string; data: Partial<ProductAvailability> }) => {
+            await apiRequest("PATCH", `/api/admin/availability/${name}`, data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/admin/availability"] });
             toast({ title: "Availability updated", description: "Changes have been saved successfully." });
         },
+    });
+
+    const createAvailabilityMutation = useMutation({
+        mutationFn: async (data: any) => {
+            await apiRequest("POST", "/api/admin/availability", data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/availability"] });
+            toast({ title: "Service added", description: "New service has been added successfully." });
+            setIsAddDialogOpen(false);
+        },
+    });
+
+    const deleteAvailabilityMutation = useMutation({
+        mutationFn: async (name: string) => {
+            await apiRequest("DELETE", `/api/admin/availability/${name}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/availability"] });
+            toast({ title: "Service deleted", description: "Service has been removed." });
+        },
+    });
+
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [newService, setNewService] = useState({
+        name: "",
+        label: "",
+        type: "output_format",
+        price: "0",
+        isActive: true
     });
 
     const isLoading = pricingLoading || availabilityLoading;
@@ -64,9 +97,74 @@ export default function AdminSettings() {
                 <AdminSidebar />
                 <div className="flex flex-col flex-1 overflow-hidden">
                     <header className="flex items-center justify-between gap-4 p-4 border-b bg-background">
-                        <div className="flex items-center gap-4">
-                            <SidebarTrigger />
-                            <h1 className="text-xl font-semibold">Settings</h1>
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <SidebarTrigger />
+                                <h1 className="text-xl font-semibold">Settings</h1>
+                            </div>
+                            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        Add Service
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Add New Service</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label>Type</Label>
+                                            <Select
+                                                value={newService.type}
+                                                onValueChange={(val) => setNewService(prev => ({ ...prev, type: val }))}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="tape_format">Tape Format</SelectItem>
+                                                    <SelectItem value="output_format">Output Option</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="s-name">System Name (ID)</Label>
+                                            <Input
+                                                id="s-name"
+                                                placeholder="e.g. blu-ray"
+                                                value={newService.name}
+                                                onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="s-label">Display Label</Label>
+                                            <Input
+                                                id="s-label"
+                                                placeholder="e.g. Blu-ray Disc"
+                                                value={newService.label}
+                                                onChange={(e) => setNewService(prev => ({ ...prev, label: e.target.value }))}
+                                            />
+                                        </div>
+                                        {newService.type === "output_format" && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="s-price">Price (EUR)</Label>
+                                                <Input
+                                                    id="s-price"
+                                                    type="number"
+                                                    value={newService.price}
+                                                    onChange={(e) => setNewService(prev => ({ ...prev, price: e.target.value }))}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                                        <Button onClick={() => createAvailabilityMutation.mutate(newService)}>Create Service</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     </header>
 
@@ -111,14 +209,45 @@ export default function AdminSettings() {
                                 <CardContent className="space-y-6">
                                     <div className="space-y-4">
                                         <h3 className="text-sm font-medium">Tape Formats</h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        <div className="grid grid-cols-1 gap-4">
                                             {tapeAvailability.map((item) => (
-                                                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg bg-background">
-                                                    <Label className="capitalize">{item.name}</Label>
-                                                    <Switch
-                                                        checked={item.isActive}
-                                                        onCheckedChange={(checked) => updateAvailabilityMutation.mutate({ name: item.name, isActive: checked })}
-                                                    />
+                                                <div key={item.id} className="flex items-center gap-4 p-3 border rounded-lg bg-background">
+                                                    <div className="flex-1 grid grid-cols-2 gap-4">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">Label</p>
+                                                            <Input
+                                                                defaultValue={item.label || item.name}
+                                                                className="h-8"
+                                                                onBlur={(e) => {
+                                                                    if (e.target.value !== item.label) {
+                                                                        updateAvailabilityMutation.mutate({ name: item.name, data: { label: e.target.value } });
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">ID</p>
+                                                            <code className="text-sm px-1 bg-muted rounded">{item.name}</code>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <Switch
+                                                            checked={item.isActive}
+                                                            onCheckedChange={(checked) => updateAvailabilityMutation.mutate({ name: item.name, data: { isActive: checked } })}
+                                                        />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-destructive h-8 w-8"
+                                                            onClick={() => {
+                                                                if (confirm("Are you sure? This may affect existing orders if deleted.")) {
+                                                                    deleteAvailabilityMutation.mutate(item.name);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -126,14 +255,58 @@ export default function AdminSettings() {
 
                                     <div className="space-y-4 pt-4 border-t">
                                         <h3 className="text-sm font-medium">Output Options</h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        <div className="grid grid-cols-1 gap-4">
                                             {outputAvailability.map((item) => (
-                                                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg bg-background">
-                                                    <Label className="capitalize">{item.name}</Label>
-                                                    <Switch
-                                                        checked={item.isActive}
-                                                        onCheckedChange={(checked) => updateAvailabilityMutation.mutate({ name: item.name, isActive: checked })}
-                                                    />
+                                                <div key={item.id} className="flex items-center gap-4 p-3 border rounded-lg bg-background">
+                                                    <div className="flex-1 grid grid-cols-3 gap-4">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">Label</p>
+                                                            <Input
+                                                                defaultValue={item.label || item.name}
+                                                                className="h-8"
+                                                                onBlur={(e) => {
+                                                                    if (e.target.value !== item.label) {
+                                                                        updateAvailabilityMutation.mutate({ name: item.name, data: { label: e.target.value } });
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">Price (EUR)</p>
+                                                            <Input
+                                                                type="number"
+                                                                defaultValue={item.price || "0"}
+                                                                className="h-8"
+                                                                onBlur={(e) => {
+                                                                    if (e.target.value !== item.price) {
+                                                                        updateAvailabilityMutation.mutate({ name: item.name, data: { price: e.target.value } });
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-muted-foreground">ID</p>
+                                                            <code className="text-sm px-1 bg-muted rounded">{item.name}</code>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <Switch
+                                                            checked={item.isActive}
+                                                            onCheckedChange={(checked) => updateAvailabilityMutation.mutate({ name: item.name, data: { isActive: checked } })}
+                                                        />
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-destructive h-8 w-8"
+                                                            onClick={() => {
+                                                                if (confirm("Are you sure? This may affect existing orders if deleted.")) {
+                                                                    deleteAvailabilityMutation.mutate(item.name);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

@@ -379,13 +379,13 @@ export const t = {
   },
 
   about: {
-    heroTitle: "Informazioni su ReelRevive",
+    heroTitle: "Informazioni su memorieindigitale.it",
     heroSubtitle: "La nostra missione è preservare i preziosi ricordi di famiglia prima che svaniscano per sempre.",
     storyTitle: "La Nostra Storia",
     storyParagraphs: [
-      "ReelRevive è nata da un'esperienza personale. Nel 2018, il nostro fondatore ha scoperto scatole di videocassette VHS nella soffitta di sua nonna dopo la sua scomparsa. Queste cassette contenevano decenni di storia familiare: compleanni, vacanze, momenti quotidiani che non erano mai stati convertiti in digitale.",
+      "memorieindigitale.it è nata da un'esperienza personale. Nel 2018, il nostro fondatore ha scoperto scatole di videocassette VHS nella soffitta di sua nonna dopo la sua scomparsa. Queste cassette contenevano decenni di storia familiare: compleanni, vacanze, momenti quotidiani che non erano mai stati convertiti in digitale.",
       "Correndo contro il tempo per preservare questi ricordi prima che le cassette si deteriorassero ulteriormente, ha scoperto che le opzioni esistenti erano troppo costose, troppo lente o non trattavano le cassette con la cura che meritavano.",
-      "È allora che è nata ReelRevive. Crediamo che tutti meritino l'accesso a una digitalizzazione di qualità professionale a prezzi equi, con il tipo di cura e attenzione che riserveresti ai ricordi della tua stessa famiglia."
+      "È allora che è nata memorieindigitale.it. Crediamo che tutti meritino l'accesso a una digitalizzazione di qualità professionale a prezzi equi, con il tipo di cura e attenzione che riserveresti ai ricordi della tua stessa famiglia."
     ],
     missionTitle: "La Nostra Missione",
     missionText: "Preservare e celebrare i ricordi di famiglia rendendo la digitalizzazione professionale delle VHS accessibile a tutti.",

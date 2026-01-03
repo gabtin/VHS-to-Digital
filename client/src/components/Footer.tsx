@@ -8,10 +8,12 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20">
           <div className="space-y-8">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="text-2xl font-display italic tracking-tight">
-                memorieindigitale<span className="text-accent font-sans not-italic font-bold">.it</span>
-              </span>
+            <Link href="/" className="flex items-center">
+              <img
+                src="/logo.png"
+                alt="MemorieInDigitale.it"
+                className="h-10 w-auto brightness-0 invert opacity-90 transition-all hover:scale-105"
+              />
             </Link>
             <p className="text-base text-stone-400 leading-relaxed font-light">
               {t.footer.description}
@@ -49,9 +51,14 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
+                <Link href="/privacy" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
                   {t.footer.privacy}
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-base text-stone-300 hover:text-accent transition-colors font-light">
+                  {t.footer.terms}
+                </Link>
               </li>
             </ul>
           </div>

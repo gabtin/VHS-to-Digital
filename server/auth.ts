@@ -315,13 +315,17 @@ export async function setupAuth(app: Express) {
     req.logout((err) => {
       if (err) return next(err);
 
-      const postLogoutRedirectUri = `${req.protocol}://${req.get("host")}`;
-      const url = client.buildEndSessionUrl(config, {
-        client_id: process.env.OIDC_CLIENT_ID!,
-        post_logout_redirect_uri: postLogoutRedirectUri,
-      }).href;
-
-      res.redirect(url);
+      try {
+        const postLogoutRedirectUri = `${req.protocol}://${req.get("host")}`;
+        const url = client.buildEndSessionUrl(config, {
+          client_id: process.env.OIDC_CLIENT_ID!,
+          post_logout_redirect_uri: postLogoutRedirectUri,
+        }).href;
+        res.redirect(url);
+      } catch (e) {
+        // Fallback if end_session_endpoint is missing (common with Google)
+        res.redirect("/");
+      }
     });
   });
 

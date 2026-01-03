@@ -38,6 +38,8 @@ import { PRICING, type TapeFormat, type OutputFormat, type TapeHandling, type Pr
 import { t } from "@/lib/translations";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { useEffect } from "react";
 
 const STEPS = t.wizard.steps;
 
@@ -60,6 +62,7 @@ const durationOptions = t.wizard.step3.durationOptions;
 
 export default function GetStarted() {
   const [, setLocation] = useLocation();
+  const { cart, updateCart } = useCart();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedFormats, setSelectedFormats] = useState<TapeFormat[]>([]);
   const [quantities, setQuantities] = useState<Record<TapeFormat, number>>({
@@ -72,6 +75,23 @@ export default function GetStarted() {
   const [processingSpeed, setProcessingSpeed] = useState<ProcessingSpeed>("standard");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [isGift, setIsGift] = useState(false);
+
+  // Restore cart state on mount
+  useEffect(() => {
+    if (cart) {
+      setQuantities(cart.tapeFormats as Record<TapeFormat, number>);
+      setSelectedFormats(Object.entries(cart.tapeFormats as Record<string, number>)
+        .filter(([, qty]) => qty > 0)
+        .map(([f]) => f as TapeFormat));
+      setEstimatedHours(cart.estimatedHours);
+      setOutputFormats(cart.outputFormats as OutputFormat[]);
+      setDvdQuantity(cart.dvdQuantity || 1);
+      setTapeHandling(cart.tapeHandling);
+      setProcessingSpeed(cart.processingSpeed);
+      setSpecialInstructions(cart.specialInstructions || "");
+      setIsGift(cart.isGift || false);
+    }
+  }, []);
 
   const totalTapes = useMemo(() => {
     return selectedFormats.reduce((sum, format) => sum + (quantities[format] || 0), 0);
@@ -96,32 +116,60 @@ export default function GetStarted() {
 
     const basePrice = totalTapes * getVal("basePricePerTape", PRICING.basePricePerTape);
     const hourlyPrice = estimatedHours * getVal("pricePerHour", PRICING.pricePerHour);
-    const usbPrice = outputFormats.includes("usb") ? getVal("usbDrive", PRICING.usbDrive) : 0;
-    const dvdPrice = outputFormats.includes("dvd") ? dvdQuantity * getVal("dvdPerDisc", PRICING.dvdPerDisc) : 0;
-    const cloudPrice = outputFormats.includes("cloud") ? getVal("cloudStorage", PRICING.cloudStorage) : 0;
+    let outputsPrice = 0;
+    outputFormats.forEach(format => {
+      const avail = availability?.find(a => a.name === format && a.type === "output_format");
+      if (avail && avail.price) {
+        const price = parseFloat(avail.price);
+        if (format === "dvd") {
+          outputsPrice += dvdQuantity * price;
+        } else {
+          outputsPrice += price;
+        }
+      }
+    });
+
     const returnPrice = tapeHandling === "return" ? getVal("returnShipping", PRICING.returnShipping) : 0;
 
-    const subtotal = basePrice + hourlyPrice + usbPrice + dvdPrice + cloudPrice + returnPrice;
+    const subtotal = basePrice + hourlyPrice + outputsPrice + returnPrice;
     const rushMultiplier = getVal("rushMultiplier", PRICING.rushMultiplier);
     const rushFee = processingSpeed === "rush" ? subtotal * rushMultiplier : 0;
     const total = subtotal + rushFee;
 
-    return { basePrice, hourlyPrice, usbPrice, dvdPrice, cloudPrice, returnPrice, subtotal, rushFee, total };
-  }, [totalTapes, estimatedHours, outputFormats, dvdQuantity, tapeHandling, processingSpeed, pricingConfigs]);
+    return { basePrice, hourlyPrice, outputsPrice, returnPrice, subtotal, rushFee, total };
+  }, [totalTapes, estimatedHours, outputFormats, dvdQuantity, tapeHandling, processingSpeed, pricingConfigs, availability]);
 
   const filteredTapeFormatOptions = useMemo(() => {
     if (!availability) return tapeFormatOptions;
-    return tapeFormatOptions.filter(opt => {
-      const avail = availability.find(a => a.name === opt.id && a.type === "tape_format");
-      return avail ? avail.isActive : true;
+    const tapeAvail = availability.filter(a => a.type === "tape_format");
+
+    // Combine hardcoded info with dynamic availability
+    return tapeAvail.map(avail => {
+      const hardcoded = tapeFormatOptions.find(opt => opt.id === avail.name);
+      return {
+        id: avail.name as TapeFormat,
+        name: avail.label || hardcoded?.name || avail.name,
+        description: hardcoded?.description || "",
+        era: hardcoded?.era || "",
+        icon: hardcoded?.icon || Video
+      };
     });
   }, [availability]);
 
   const filteredOutputOptions = useMemo(() => {
     if (!availability) return outputOptions;
-    return outputOptions.filter(opt => {
-      const avail = availability.find(a => a.name === opt.id && a.type === "output_format");
-      return avail ? avail.isActive : true;
+    const outputAvail = availability.filter(a => a.type === "output_format");
+
+    return outputAvail.map(avail => {
+      const hardcoded = outputOptions.find(opt => opt.id === avail.name);
+      return {
+        id: avail.name as OutputFormat,
+        name: avail.label || hardcoded?.name || avail.name,
+        description: hardcoded?.description || "",
+        price: avail.price ? `${parseFloat(avail.price).toFixed(2)} EUR` : hardcoded?.price || "0.00 EUR",
+        icon: hardcoded?.icon || Download,
+        included: hardcoded?.included
+      };
     });
   }, [availability]);
 
@@ -174,6 +222,10 @@ export default function GetStarted() {
       specialInstructions: specialInstructions || undefined,
       isGift,
     };
+
+    // Update global cart
+    updateCart(config);
+
     setLocation(`/checkout?config=${encodeURIComponent(JSON.stringify(config))}`);
   };
 
@@ -767,24 +819,20 @@ export default function GetStarted() {
                     <span className="text-muted-foreground">{t.wizard.summary.footage} ({estimatedHours} {t.wizard.summary.hours})</span>
                     <span className="text-foreground">{dynamicPricing.hourlyPrice.toFixed(2)} EUR</span>
                   </div>
-                  {dynamicPricing.usbPrice > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t.wizard.summary.usbDrive}</span>
-                      <span className="text-foreground">{dynamicPricing.usbPrice.toFixed(2)} EUR</span>
-                    </div>
-                  )}
-                  {dynamicPricing.dvdPrice > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t.wizard.summary.dvdCopies} ({dvdQuantity} {t.wizard.summary.discs})</span>
-                      <span className="text-foreground">{dynamicPricing.dvdPrice.toFixed(2)} EUR</span>
-                    </div>
-                  )}
-                  {dynamicPricing.cloudPrice > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t.wizard.summary.cloudStorage}</span>
-                      <span className="text-foreground">{dynamicPricing.cloudPrice.toFixed(2)} EUR</span>
-                    </div>
-                  )}
+                  {outputFormats.map(format => {
+                    const avail = availability?.find(a => a.name === format && a.type === "output_format");
+                    if (!avail || !avail.price || parseFloat(avail.price) === 0) return null;
+                    const price = parseFloat(avail.price);
+                    const finalPrice = format === "dvd" ? price * dvdQuantity : price;
+                    const label = avail.label || format.toUpperCase();
+
+                    return (
+                      <div key={format} className="flex justify-between">
+                        <span className="text-muted-foreground">{label} {format === "dvd" ? `(${dvdQuantity} ${t.wizard.summary.discs})` : ""}</span>
+                        <span className="text-foreground">{finalPrice.toFixed(2)} EUR</span>
+                      </div>
+                    );
+                  })}
                   {dynamicPricing.returnPrice > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t.wizard.summary.returnShipping}</span>

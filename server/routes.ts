@@ -6,6 +6,12 @@ import { z } from "zod";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { isAuthenticated, ensureAdmin } from "./auth";
 import orderMessagesRouter from "./routes/orderMessages";
+import { sendcloudService } from "./services/sendcloud";
+import { sendOrderStatusEmail } from "./lib/email";
+import { googleDriveService } from "./services/google-drive";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 async function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
   const configs = await storage.getPricingConfigs();
@@ -14,6 +20,8 @@ async function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
     pricing[c.key] = parseFloat(c.value);
   });
 
+  const availability = await storage.getProductAvailability();
+
   // Fallback to PRICING constants if DB is missing values (shouldn't happen with seeding)
   const getPrice = (key: string, fallback: number) => pricing[key] ?? fallback;
 
@@ -21,15 +29,19 @@ async function calculatePricing(config: z.infer<typeof orderConfigSchema>) {
   let subtotal = totalTapes * getPrice("basePricePerTape", PRICING.basePricePerTape);
   subtotal += config.estimatedHours * getPrice("pricePerHour", PRICING.pricePerHour);
 
-  if (config.outputFormats.includes("usb")) {
-    subtotal += getPrice("usbDrive", PRICING.usbDrive);
+  // Dynamic output formats pricing
+  for (const format of config.outputFormats) {
+    const avail = availability.find(a => a.name === format && a.type === "output_format");
+    if (avail && avail.price) {
+      const price = parseFloat(avail.price);
+      if (format === "dvd" && config.dvdQuantity) {
+        subtotal += config.dvdQuantity * price;
+      } else {
+        subtotal += price;
+      }
+    }
   }
-  if (config.outputFormats.includes("dvd") && config.dvdQuantity) {
-    subtotal += config.dvdQuantity * getPrice("dvdPerDisc", PRICING.dvdPerDisc);
-  }
-  if (config.outputFormats.includes("cloud")) {
-    subtotal += getPrice("cloudStorage", PRICING.cloudStorage);
-  }
+
   if (config.tapeHandling === "return") {
     subtotal += getPrice("returnShipping", PRICING.returnShipping);
   }
@@ -59,6 +71,61 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // ============ PUBLIC ROUTES ============
+
+
+  app.get("/api/pricing", async (req: Request, res: Response) => {
+    try {
+      const configs = await storage.getPricingConfigs();
+      res.json(configs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pricing configs" });
+    }
+  });
+
+  app.get("/api/availability", async (req: Request, res: Response) => {
+    try {
+      const availability = await storage.getProductAvailability();
+      res.json(availability.filter(a => a.isActive));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch product availability" });
+    }
+  });
+
+  app.post("/api/shipping/rates", async (req: Request, res: Response) => {
+    try {
+      const { from, to, parcels } = req.body;
+
+      // Basic validation
+      if (!from?.zip || !to?.zip || !parcels) {
+        return res.status(400).json({ error: "Missing required shipping parameters" });
+      }
+
+      const rates = await sendcloudService.getRates(from, to, parcels);
+      res.json(rates);
+    } catch (error) {
+      console.error("Shipping rates error:", error);
+      res.status(500).json({ error: "Failed to fetch shipping rates" });
+    }
+  });
+
+  app.get("/api/shipping/service-points", async (req: Request, res: Response) => {
+    try {
+      const { country, city, zip } = req.query;
+      if (!zip) return res.status(400).json({ error: "Zip code is required" });
+
+      const points = await sendcloudService.getServicePoints(
+        (country as string) || "IT",
+        (city as string) || "",
+        zip as string
+      );
+      res.json(points);
+    } catch (error) {
+      console.error("Service points error:", error);
+      res.status(500).json({ error: "Failed to fetch service points" });
+    }
+  });
 
   // ============ USER ROUTES ============
 
@@ -183,7 +250,7 @@ export async function registerRoutes(
 
   app.post("/api/stripe/create-checkout-session", async (req: Request, res: Response) => {
     try {
-      const { orderConfig, shippingInfo } = req.body;
+      const { orderConfig, shippingInfo, shippingRate } = req.body;
 
       const parsedConfig = orderConfigSchema.parse(orderConfig);
       const parsedShipping = shippingInfoSchema.extend({
@@ -230,6 +297,20 @@ export async function registerRoutes(
         });
       }
 
+      if (shippingRate) {
+        lineItems.push({
+          price_data: {
+            currency: shippingRate.currency.toLowerCase(),
+            product_data: {
+              name: `Spedizione: ${shippingRate.carrierName} - ${shippingRate.serviceName}`,
+              description: `Consegna stimata: ${shippingRate.estimatedDays} giorni`,
+            },
+            unit_amount: Math.round(shippingRate.price * 100),
+          },
+          quantity: 1,
+        });
+      }
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: lineItems,
@@ -241,6 +322,7 @@ export async function registerRoutes(
           orderConfig: JSON.stringify(parsedConfig),
           shippingInfo: JSON.stringify(parsedShipping),
           serverPricing: JSON.stringify(serverPricing),
+          shippingRate: shippingRate ? JSON.stringify(shippingRate) : "",
         },
       });
 
@@ -305,6 +387,39 @@ export async function registerRoutes(
 
       const totalTapes = Object.values(orderConfig.tapeFormats as Record<string, number>).reduce((sum: number, qty: number) => sum + qty, 0);
 
+      // Book Sendcloud Parcel
+      let shippingReference: string | undefined;
+      let shippingLabelUrl: string | undefined;
+
+      const shippingRate = session.metadata.shippingRate ? JSON.parse(session.metadata.shippingRate) : null;
+      if (shippingRate && shippingRate.serviceId) {
+        try {
+          console.log("Booking Sendcloud parcel for service:", shippingRate.serviceId);
+
+          const userAddress = {
+            shippingName: shippingInfo.name,
+            email: shippingInfo.email,
+            shippingPhone: shippingInfo.shippingPhone || "",
+            shippingAddress: shippingInfo.shippingAddress,
+            shippingCity: shippingInfo.shippingCity,
+            shippingZip: shippingInfo.shippingZip,
+            totalWeight: totalTapes * 400 + (orderConfig.dvdQuantity || 0) * 100, // Estimate weight in grams
+            shippingDropoffId: shippingRate.servicePointId
+          };
+
+          const shipment = await sendcloudService.createParcel(
+            userAddress,
+            shippingRate.serviceId
+          );
+          shippingReference = shipment.reference;
+          shippingLabelUrl = shipment.labelUrl;
+          console.log("Sendcloud parcel booked:", shippingReference);
+        } catch (err) {
+          console.error("Failed to book Sendcloud parcel:", err);
+          // Continue to create order even if shipping fails
+        }
+      }
+
       const order = await storage.createOrder({
         userId: user.id,
         status: "pending",
@@ -327,6 +442,11 @@ export async function registerRoutes(
         rushFee: pricing.rushFee.toString(),
         total: pricing.total.toString(),
         stripeSessionId: sessionId,
+        shippingProvider: shippingRate ? "Sendcloud" : null,
+        shippingServiceId: shippingRate ? shippingRate.serviceId : null,
+        shippingDropoffId: shippingRate && shippingRate.servicePointId ? shippingRate.servicePointId.toString() : null,
+        shippingReference: shippingReference || null,
+        shippingLabelUrl: shippingLabelUrl || null,
       });
 
       res.json({ order, session });
@@ -428,9 +548,72 @@ export async function registerRoutes(
       }
 
       const order = await storage.updateOrder(req.params.id, updateData);
+
+      // Notify customer if status changed
+      if (req.body.status && req.body.status !== existingOrder.status && order && order.userId) {
+        // Fetch user email
+        const user = await storage.getUser(order.userId);
+        if (user && user.email) {
+          await sendOrderStatusEmail(
+            user.email,
+            order.orderNumber,
+            req.body.status,
+            req.body.status === "shipped" && req.body.trackingNumber ? `Codice Tracciamento: ${req.body.trackingNumber}` : undefined
+          );
+        }
+      }
+
       res.json(order);
     } catch (error) {
       res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
+  app.post("/api/admin/orders/:id/upload", ensureAdmin, upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      const orderId = req.params.id;
+      const order = await storage.getOrder(orderId);
+
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // 1. Create folder if not already exists (or just use one)
+      // For simplicity, we create one folder per order if we don't store folderId in DB yet
+      // In a real app, we'd store googleDriveFolderId in the orders table.
+      const folderId = await googleDriveService.createOrderFolder(order.orderNumber);
+
+      if (!folderId) {
+        return res.status(500).json({ error: "Failed to create Google Drive folder" });
+      }
+
+      // 2. Upload file
+      const downloadUrl = await googleDriveService.uploadFile(folderId, req.file.originalname, req.file.buffer);
+
+      if (!downloadUrl) {
+        return res.status(500).json({ error: "Failed to upload to Google Drive" });
+      }
+
+      // 3. Update order
+      const updatedOrder = await storage.updateOrder(orderId, {
+        downloadUrl,
+        status: "ready_for_download"
+      });
+
+      // 4. Notify customer
+      const user = await storage.getUser(order.userId!);
+      if (user && user.email) {
+        await sendOrderStatusEmail(user.email, order.orderNumber, "ready_for_download");
+      }
+
+      res.json(updatedOrder);
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: error.message || "Failed to upload file" });
     }
   });
 
@@ -525,11 +708,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/availability/:name", ensureAdmin, async (req: Request, res: Response) => {
     try {
-      const { isActive } = req.body;
-      if (isActive === undefined) {
-        return res.status(400).json({ error: "isActive is required" });
-      }
-      const availability = await storage.updateProductAvailability(req.params.name, isActive);
+      const availability = await storage.updateProductAvailability(req.params.name, req.body);
       if (!availability) {
         return res.status(404).json({ error: "Availability record not found" });
       }
@@ -539,31 +718,29 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/admin/availability", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const availability = await storage.createProductAvailability(req.body);
+      res.status(201).json(availability);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create product availability" });
+    }
+  });
+
+  app.delete("/api/admin/availability/:name", ensureAdmin, async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteProductAvailability(req.params.name);
+      if (!success) {
+        return res.status(404).json({ error: "Availability record not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete product availability" });
+    }
+  });
+
   // ============ PRICING CALCULATOR ============
 
-  app.post("/api/pricing/calculate", async (req: Request, res: Response) => {
-    try {
-      const parsed = orderConfigSchema.parse(req.body);
-      const pricing = await calculatePricing(parsed);
-      res.json(pricing);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      res.status(500).json({ error: "Failed to calculate pricing" });
-    }
-  });
-
-  // ============ PUBLIC PRICING ROUTES ============
-
-  app.get("/api/pricing", async (req: Request, res: Response) => {
-    try {
-      const configs = await storage.getPricingConfigs();
-      res.json(configs);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch pricing configs" });
-    }
-  });
 
   // ============ ORDER MESSAGING ROUTES ============
   app.use("/api", isAuthenticated, orderMessagesRouter);

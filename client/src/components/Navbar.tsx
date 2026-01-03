@@ -2,8 +2,9 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/use-auth";
-import { Menu, X, Film, LogOut, User, Mail, ChevronDown, Shield, ShoppingCart } from "lucide-react";
+import { Menu, X, Film, LogOut, User, Mail, ChevronDown, Shield, ShoppingCart, Library } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useCart } from "@/hooks/use-cart";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
+  const { itemCount, cart } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,16 +49,15 @@ export function Navbar() {
         <div className="flex justify-between items-center h-12">
           {/* Logo Section */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground group-hover:scale-110 transition-transform duration-300">
-                <Film className="w-5 h-5" />
-              </div>
-              <span className={cn(
-                "text-xl font-display italic tracking-tight transition-colors",
-                !isScrolled && isDarkHero ? "text-white" : "text-foreground"
-              )}>
-                memorieindigitale<span className="text-accent font-sans not-italic font-bold">.it</span>
-              </span>
+            <Link href="/" className="flex items-center group">
+              <img
+                src="/logo.png"
+                alt="MemorieInDigitale.it"
+                className={cn(
+                  "h-10 w-auto transition-all duration-300 group-hover:scale-105",
+                  !isScrolled && isDarkHero && "brightness-0 invert opacity-90"
+                )}
+              />
             </Link>
           </div>
 
@@ -97,60 +98,106 @@ export function Navbar() {
             <div className="flex items-center gap-4">
 
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn(
-                      "flex items-center gap-2 px-3 h-10 rounded-full transition-all border border-transparent",
-                      isScrolled
-                        ? "hover:bg-stone-100 hover:border-stone-200"
-                        : (isDarkHero ? "hover:bg-white/10 text-white" : "hover:bg-stone-100 hover:border-stone-200 text-stone-900")
-                    )}>
-                      <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
-                        {user.firstName ? user.firstName[0] : (user.email ? user.email[0].toUpperCase() : 'U')}
-                      </div>
-                      <span className="text-sm font-semibold">{user.firstName || (user.email ? user.email.split('@')[0] : 'User')}</span>
-                      <ChevronDown className="w-4 h-4 opacity-50" />
+                <div className="flex items-center gap-3">
+                  {/* Cart Icon */}
+                  <Link href="/checkout">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "relative rounded-full w-10 h-10 transition-all",
+                        itemCount > 0 ? "text-accent" : (
+                          !isScrolled && isDarkHero ? "text-white/70 hover:text-white" : "text-stone-500 hover:text-stone-900"
+                        )
+                      )}
+                    >
+                      <Library className="w-5 h-5" />
+                      {itemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground animate-in zoom-in">
+                          {itemCount}
+                        </span>
+                      )}
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 p-2 rounded-2xl shadow-xl border-stone-200 overflow-hidden">
-                    <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
-                      <Link href="/dashboard" className="flex items-center gap-3 cursor-pointer">
-                        <ShoppingCart className="w-4 h-4 opacity-70" />
-                        <span className="font-medium">{t.nav.dashboard}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
-                      <Link href="/profile" className="flex items-center gap-3 cursor-pointer">
-                        <User className="w-4 h-4 opacity-70" />
-                        <span className="font-medium">{t.nav.profile}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    {isAdmin && (
+                  </Link>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className={cn(
+                        "flex items-center gap-2 px-3 h-10 rounded-full transition-all border border-transparent",
+                        isScrolled
+                          ? "hover:bg-stone-100 hover:border-stone-200"
+                          : (isDarkHero ? "hover:bg-white/10 text-white" : "hover:bg-stone-100 hover:border-stone-200 text-stone-900")
+                      )}>
+                        <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
+                          {user.firstName ? user.firstName[0] : (user.email ? user.email[0].toUpperCase() : 'U')}
+                        </div>
+                        <span className="text-sm font-semibold">{user.firstName || (user.email ? user.email.split('@')[0] : 'User')}</span>
+                        <ChevronDown className="w-4 h-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 mt-2 p-2 rounded-2xl shadow-xl border-stone-200 overflow-hidden">
                       <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
-                        <Link href="/admin" className="flex items-center gap-3 cursor-pointer">
-                          <Shield className="w-4 h-4 text-accent" />
-                          <span className="font-medium">{t.nav.adminPanel}</span>
+                        <Link href="/dashboard" className="flex items-center gap-3 cursor-pointer">
+                          <ShoppingCart className="w-4 h-4 opacity-70" />
+                          <span className="font-medium">{t.nav.dashboard}</span>
                         </Link>
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator className="my-1 bg-stone-100" />
-                    <DropdownMenuItem
-                      className="rounded-xl p-3 text-destructive focus:bg-destructive/5 cursor-pointer"
-                      onClick={() => logout()}
-                    >
-                      <div className="flex items-center gap-3">
-                        <LogOut className="w-4 h-4" />
-                        <span className="font-medium">{t.nav.logout}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
+                        <Link href="/profile" className="flex items-center gap-3 cursor-pointer">
+                          <User className="w-4 h-4 opacity-70" />
+                          <span className="font-medium">{t.nav.profile}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem asChild className="rounded-xl p-3 focus:bg-stone-50">
+                          <Link href="/admin" className="flex items-center gap-3 cursor-pointer">
+                            <Shield className="w-4 h-4 text-accent" />
+                            <span className="font-medium">{t.nav.adminPanel}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator className="my-1 bg-stone-100" />
+                      <DropdownMenuItem
+                        className="rounded-xl p-3 text-destructive focus:bg-destructive/5 cursor-pointer"
+                        onClick={() => logout()}
+                      >
+                        <div className="flex items-center gap-3">
+                          <LogOut className="w-4 h-4" />
+                          <span className="font-medium">{t.nav.logout}</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ) : (
-                <Link href="/auth">
-                  <Button className="rounded-full px-6 h-10 font-bold tracking-tight shadow-md hover:shadow-lg transition-all">
-                    {t.nav.login}
-                  </Button>
-                </Link>
+                <div className="flex items-center gap-3">
+                  {/* Cart Icon for Guest */}
+                  <Link href="/get-started">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "relative rounded-full w-10 h-10 transition-all",
+                        itemCount > 0 ? "text-accent" : (
+                          !isScrolled && isDarkHero ? "text-white/70 hover:text-white" : "text-stone-500 hover:text-stone-900"
+                        )
+                      )}
+                    >
+                      <Library className="w-5 h-5" />
+                      {itemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                          {itemCount}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
+
+                  <Link href="/auth">
+                    <Button className="rounded-full px-6 h-10 font-bold tracking-tight shadow-md hover:shadow-lg transition-all">
+                      {t.nav.login}
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>

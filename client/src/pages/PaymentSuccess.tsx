@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Loader2, Package, ArrowRight, AlertCircle, FileText } from "lucide-react";
 import { t } from "@/lib/translations";
+import { useCart } from "@/hooks/use-cart";
 
 interface OrderResult {
   id: string;
@@ -16,23 +17,24 @@ export default function PaymentSuccess() {
   const [, setLocation] = useLocation();
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { clearCart } = useCart();
 
   const createOrderMutation = useMutation({
     mutationFn: async (sessionId: string) => {
       const response = await apiRequest("POST", "/api/stripe/verify-and-create-order", {
         sessionId,
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "Impossibile verificare il pagamento");
       }
-      
+
       return await response.json();
     },
     onSuccess: (data) => {
       setOrderResult(data.order);
-      localStorage.removeItem("orderConfig");
+      clearCart();
     },
     onError: (err: any) => {
       setError(err.message || "Impossibile creare l'ordine");
@@ -42,7 +44,7 @@ export default function PaymentSuccess() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
-    
+
     if (sessionId && !orderResult && !error) {
       createOrderMutation.mutate(sessionId);
     }
@@ -117,14 +119,14 @@ export default function PaymentSuccess() {
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
             <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
-          
+
           <h1 className="text-2xl font-bold text-foreground mb-2" data-testid="text-success-title">
             {t.paymentSuccess.title}
           </h1>
           <p className="text-muted-foreground mb-6">
             {t.paymentSuccess.subtitle}
           </p>
-          
+
           <div className="bg-secondary/50 rounded-lg p-4 mb-8">
             <p className="text-sm text-muted-foreground mb-1">{t.paymentSuccess.orderNumber}</p>
             <p className="text-2xl font-mono font-bold text-foreground" data-testid="text-order-number">

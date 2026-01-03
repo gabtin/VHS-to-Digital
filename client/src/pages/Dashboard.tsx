@@ -179,6 +179,14 @@ export default function Dashboard() {
                                   </Button>
                                 </Link>
                               )}
+                              {order.downloadUrl && (
+                                <a href={order.downloadUrl} target="_blank" rel="noopener noreferrer">
+                                  <Button className="bg-accent text-accent-foreground" data-testid={`button-download-${order.id}`}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    {t.dashboard.download}
+                                  </Button>
+                                </a>
+                              )}
                               <Link href={`/order/${order.orderNumber}`}>
                                 <Button variant="outline" data-testid={`button-track-${order.id}`}>
                                   {t.dashboard.trackOrder}
@@ -226,10 +234,12 @@ export default function Dashboard() {
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               {order.downloadUrl && (
-                                <Button className="bg-accent text-accent-foreground" data-testid={`button-download-${order.id}`}>
-                                  <Download className="w-4 h-4 mr-2" />
-                                  {t.dashboard.download}
-                                </Button>
+                                <a href={order.downloadUrl} target="_blank" rel="noopener noreferrer">
+                                  <Button className="bg-accent text-accent-foreground" data-testid={`button-download-${order.id}`}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    {t.dashboard.download}
+                                  </Button>
+                                </a>
                               )}
                               <Link href={`/order/${order.orderNumber}`}>
                                 <Button variant="outline" data-testid={`button-view-${order.id}`}>

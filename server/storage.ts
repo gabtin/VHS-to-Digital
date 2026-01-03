@@ -32,7 +32,9 @@ export interface IStorage {
   getPricingConfigs(): Promise<PricingConfig[]>;
   updatePricingConfig(key: string, value: string): Promise<PricingConfig | undefined>;
   getProductAvailability(): Promise<ProductAvailability[]>;
-  updateProductAvailability(name: string, isActive: boolean): Promise<ProductAvailability | undefined>;
+  createProductAvailability(data: InsertProductAvailability): Promise<ProductAvailability>;
+  updateProductAvailability(name: string, data: Partial<InsertProductAvailability>): Promise<ProductAvailability | undefined>;
+  deleteProductAvailability(name: string): Promise<boolean>;
   seedInitialConfigs(): Promise<void>;
 }
 
@@ -158,12 +160,27 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(productAvailability);
   }
 
-  async updateProductAvailability(name: string, isActive: boolean): Promise<ProductAvailability | undefined> {
+  async createProductAvailability(data: InsertProductAvailability): Promise<ProductAvailability> {
+    const [availability] = await db.insert(productAvailability).values(data).returning();
+    return availability;
+  }
+
+  async updateProductAvailability(name: string, data: Partial<InsertProductAvailability>): Promise<ProductAvailability | undefined> {
     const [availability] = await db.update(productAvailability)
-      .set({ isActive, updatedAt: new Date() })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(productAvailability.name, name))
       .returning();
     return availability;
+  }
+
+  async deleteProductAvailability(name: string): Promise<boolean> {
+    const [existing] = await db.select().from(productAvailability).where(eq(productAvailability.name, name));
+    if (!existing) return false;
+
+    // Prevent deletion of "core" services that aren't dynamic? 
+    // For now, allow deletion of any.
+    await db.delete(productAvailability).where(eq(productAvailability.name, name));
+    return true;
   }
 
   async seedInitialConfigs(): Promise<void> {
@@ -185,8 +202,26 @@ export class DatabaseStorage implements IStorage {
     // Seed availability if empty
     const existingAvailability = await this.getProductAvailability();
     if (existingAvailability.length === 0) {
-      const tapeInitial = tapeFormats.map(name => ({ type: "tape_format" as const, name, isActive: true }));
-      const outputInitial = outputFormats.map(name => ({ type: "output_format" as const, name, isActive: true }));
+      const tapeInitial = tapeFormats.map(name => ({
+        type: "tape_format" as const,
+        name,
+        isActive: true,
+        label: name.toUpperCase()
+      }));
+      const outputInitial = outputFormats.map(name => {
+        let price = "0";
+        if (name === "usb") price = PRICING.usbDrive.toString();
+        if (name === "dvd") price = PRICING.dvdPerDisc.toString();
+        if (name === "cloud") price = PRICING.cloudStorage.toString();
+
+        return {
+          type: "output_format" as const,
+          name,
+          isActive: true,
+          label: name.toUpperCase(),
+          price
+        };
+      });
       await db.insert(productAvailability).values([...tapeInitial, ...outputInitial]);
     }
   }
