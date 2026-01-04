@@ -209,7 +209,7 @@ export default function Pricing() {
           <p className="text-lg text-accent-foreground/80 mb-6 max-w-xl mx-auto">
             {t.pricing.bulkSubtitle}
           </p>
-          <a href="mailto:info@reelrevive.it">
+          <a href="mailto:info@memorieindigitale.it">
             <Button variant="outline" size="lg" className="border-accent-foreground/30 text-accent-foreground bg-accent-foreground/10" data-testid="button-contact-bulk">
               {t.pricing.bulkButton}
             </Button>

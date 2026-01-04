@@ -1,11 +1,18 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -15,77 +22,58 @@ import {
 } from "@/components/ui/select";
 import {
   SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard,
-  Package,
-  Users,
-  Settings,
-  Film,
   Search,
   Eye,
-  Zap,
-  ArrowRight
+  Filter,
+  Loader2
 } from "lucide-react";
 import type { Order } from "@shared/schema";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { t } from "@/lib/translations";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
-  label_sent: { label: "Label Sent", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  tapes_received: { label: "Received", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  in_progress: { label: "In Progress", color: "bg-accent/20 text-accent" },
-  quality_check: { label: "QC", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  ready_for_download: { label: "Ready", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  shipped: { label: "Shipped", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  complete: { label: "Complete", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive" },
+  pending: { label: t.orderStatus.pending, color: "bg-muted text-muted-foreground" },
+  label_sent: { label: t.orderStatus.label_sent, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  tapes_received: { label: t.orderStatus.tapes_received, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  in_progress: { label: t.orderStatus.in_progress, color: "bg-accent/20 text-accent" },
+  quality_check: { label: t.orderStatus.quality_check, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  ready_for_download: { label: t.orderStatus.ready_for_download, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  shipped: { label: t.orderStatus.shipped, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  complete: { label: t.orderStatus.complete, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  cancelled: { label: t.orderStatus.cancelled, color: "bg-destructive/20 text-destructive" },
 };
 
-const statusOptions = [
-  { value: "all", label: "All Statuses" },
-  { value: "pending", label: "Pending" },
-  { value: "label_sent", label: "Label Sent" },
-  { value: "tapes_received", label: "Tapes Received" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "quality_check", label: "Quality Check" },
-  { value: "ready_for_download", label: "Ready for Download" },
-  { value: "shipped", label: "Shipped" },
-  { value: "complete", label: "Complete" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-// Local AdminSidebar removed
-
 export default function AdminOrders() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: orders = [], isLoading } = useQuery<Order[]>({
+  const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
   });
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = orders?.filter((order) => {
+    const matchesStatus = filterStatus === "all" || order.status === filterStatus;
     const matchesSearch =
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.shippingName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+      order.shippingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
   });
 
   const sidebarStyle = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "4rem",
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-muted/30">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider style={sidebarStyle as React.CSSProperties}>
@@ -96,13 +84,13 @@ export default function AdminOrders() {
             <div className="flex items-center gap-4">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
               <h1 className="text-xl font-semibold text-foreground" data-testid="text-orders-title">
-                Orders
+                {t.admin.backToOrders}
               </h1>
             </div>
             <Link href="/">
               <Button variant="outline" size="sm" data-testid="button-view-site">
                 <Eye className="w-4 h-4 mr-2" />
-                View Site
+                {t.admin.viewSite}
               </Button>
             </Link>
           </header>
@@ -114,23 +102,28 @@ export default function AdminOrders() {
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search by order number or customer name..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cerca ordini..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
                       data-testid="input-search"
                     />
                   </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-full sm:w-48" data-testid="select-status">
-                      <SelectValue placeholder="Filter by status" />
+                      <SelectValue placeholder="Filtra per stato" />
                     </SelectTrigger>
                     <SelectContent>
-                      {statusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="all">Tutti gli stati</SelectItem>
+                      <SelectItem value="pending">{t.orderStatus.pending}</SelectItem>
+                      <SelectItem value="label_sent">{t.orderStatus.label_sent}</SelectItem>
+                      <SelectItem value="tapes_received">{t.orderStatus.tapes_received}</SelectItem>
+                      <SelectItem value="in_progress">{t.orderStatus.in_progress}</SelectItem>
+                      <SelectItem value="quality_check">{t.orderStatus.quality_check}</SelectItem>
+                      <SelectItem value="ready_for_download">{t.orderStatus.ready_for_download}</SelectItem>
+                      <SelectItem value="shipped">{t.orderStatus.shipped}</SelectItem>
+                      <SelectItem value="complete">{t.orderStatus.complete}</SelectItem>
+                      <SelectItem value="cancelled">{t.orderStatus.cancelled}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -140,41 +133,35 @@ export default function AdminOrders() {
             <Card data-testid="card-orders-table">
               <CardHeader className="flex flex-row items-center justify-between gap-2">
                 <CardTitle>
-                  Orders ({filteredOrders.length})
+                  Orders ({filteredOrders?.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : filteredOrders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No orders found matching your criteria.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Order</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Customer</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Tapes</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Total</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredOrders.map((order) => {
+                <div className="bg-background rounded-lg border shadow-sm overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]"># Ordine</TableHead>
+                        <TableHead>{t.admin.customer}</TableHead>
+                        <TableHead>Stato</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead className="text-right">Totale</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            {t.admin.orderNotFound}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredOrders?.map((order) => {
                           const status = statusConfig[order.status] || statusConfig.pending;
                           const isRush = order.processingSpeed === "rush";
                           return (
-                            <tr key={order.id} className="border-b last:border-0 hover:bg-muted/50" data-testid={`row-order-${order.id}`}>
-                              <td className="py-3 px-4">
+                            <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/admin/orders/${order.id}`}>
+                              <TableCell className="font-medium">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-medium text-foreground text-sm">{order.orderNumber}</span>
                                   {isRush && (
@@ -184,44 +171,42 @@ export default function AdminOrders() {
                                     </Badge>
                                   )}
                                 </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="text-sm text-foreground">{order.shippingName}</div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm text-foreground">{order.totalTapes}</span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm font-medium text-foreground">${order.total}</span>
-                              </td>
-                              <td className="py-3 px-4">
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium">{order.shippingName}</div>
+                                {order.shippingPhone && (
+                                  <div className="text-xs text-muted-foreground">{order.shippingPhone}</div>
+                                )}
+                              </TableCell>
+                              <TableCell>
                                 <Badge className={status.color}>{status.label}</Badge>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(order.createdAt!).toLocaleDateString()}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-right">
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {new Date(order.createdAt!).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                €{order.total}
+                              </TableCell>
+                              <TableCell className="text-right">
                                 <Link href={`/admin/orders/${order.id}`}>
-                                  <Button variant="ghost" size="sm" data-testid={`button-view-order-${order.id}`}>
+                                  <Button variant="ghost" size="sm">
                                     View
                                     <ArrowRight className="w-3 h-3 ml-1" />
                                   </Button>
                                 </Link>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+          </main >
+        </div >
+      </div >
+    </SidebarProvider >
   );
 }

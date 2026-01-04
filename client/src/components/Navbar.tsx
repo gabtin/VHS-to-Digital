@@ -34,7 +34,7 @@ export function Navbar() {
   const isAdmin = user?.isAdmin;
   const isActive = (path: string) => location === path;
 
-  const isDarkHero = location === "/about";
+  const isDarkHero = location === "/about" || location === "/pricing";
 
   return (
     <nav
@@ -55,7 +55,7 @@ export function Navbar() {
                 alt="MemorieInDigitale.it"
                 className={cn(
                   "h-10 w-auto transition-all duration-300 group-hover:scale-105",
-                  !isScrolled && isDarkHero && "brightness-0 invert opacity-90"
+                  !isScrolled && isDarkHero && "brightness-0 invert opacity-90 dark:filter-none"
                 )}
               />
             </Link>
@@ -67,7 +67,7 @@ export function Navbar() {
               "text-[15px] font-medium transition-colors",
               isActive("/") ? "text-accent" : (
                 !isScrolled && isDarkHero
-                  ? "text-white/80 hover:text-white"
+                  ? "text-primary-foreground/80 hover:text-primary-foreground"
                   : "text-stone-600 hover:text-stone-900"
               )
             )}>
@@ -77,7 +77,7 @@ export function Navbar() {
               "text-[15px] font-medium transition-colors",
               isActive("/pricing") ? "text-accent" : (
                 !isScrolled && isDarkHero
-                  ? "text-white/80 hover:text-white"
+                  ? "text-primary-foreground/80 hover:text-primary-foreground"
                   : "text-stone-600 hover:text-stone-900"
               )
             )}>
@@ -87,7 +87,7 @@ export function Navbar() {
               "text-[15px] font-medium transition-colors",
               isActive("/about") ? "text-accent" : (
                 !isScrolled && isDarkHero
-                  ? "text-white/80 hover:text-white"
+                  ? "text-primary-foreground/80 hover:text-primary-foreground"
                   : "text-stone-600 hover:text-stone-900"
               )
             )}>
@@ -126,7 +126,7 @@ export function Navbar() {
                         "flex items-center gap-2 px-3 h-10 rounded-full transition-all border border-transparent",
                         isScrolled
                           ? "hover:bg-stone-100 hover:border-stone-200"
-                          : (isDarkHero ? "hover:bg-white/10 text-white" : "hover:bg-stone-100 hover:border-stone-200 text-stone-900")
+                          : (isDarkHero ? "hover:bg-primary-foreground/10 text-primary-foreground" : "hover:bg-stone-100 hover:border-stone-200 text-stone-900")
                       )}>
                         <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
                           {user.firstName ? user.firstName[0] : (user.email ? user.email[0].toUpperCase() : 'U')}
@@ -179,7 +179,7 @@ export function Navbar() {
                       className={cn(
                         "relative rounded-full w-10 h-10 transition-all",
                         itemCount > 0 ? "text-accent" : (
-                          !isScrolled && isDarkHero ? "text-white/70 hover:text-white" : "text-stone-500 hover:text-stone-900"
+                          !isScrolled && isDarkHero ? "text-primary-foreground/70 hover:text-primary-foreground" : "text-stone-500 hover:text-stone-900"
                         )
                       )}
                     >

@@ -106,9 +106,9 @@ export const orders = pgTable("orders", {
   stripeSessionId: text("stripe_session_id").unique(),
 
   // Tracking and Shipping
-  shippingProvider: text("shipping_provider"), // e.g. Packlink or specific carrier
-  shippingServiceId: text("shipping_service_id"), // ID from Packlink
-  shippingReference: text("shipping_reference"), // Packlink Shipment Reference
+  shippingProvider: text("shipping_provider"), // e.g. Sendcloud or specific carrier
+  shippingServiceId: text("shipping_service_id"), // ID from Shipping Provider
+  shippingReference: text("shipping_reference"), // Shipment Reference
   shippingDropoffId: text("shipping_dropoff_id"), // Selected dropoff point ID
   shippingLabelUrl: text("shipping_label_url"),
   trackingNumber: text("tracking_number"),

@@ -47,27 +47,27 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { AdminOrderMessagesPanel } from "@/components/messaging/AdminOrderMessagesPanel";
 
 const statusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "label_sent", label: "Label Sent" },
-  { value: "tapes_received", label: "Tapes Received" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "quality_check", label: "Quality Check" },
-  { value: "ready_for_download", label: "Ready for Download" },
-  { value: "shipped", label: "Shipped" },
-  { value: "complete", label: "Complete" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "pending", label: t.orderStatus.pending },
+  { value: "label_sent", label: t.orderStatus.label_sent },
+  { value: "tapes_received", label: t.orderStatus.tapes_received },
+  { value: "in_progress", label: t.orderStatus.in_progress },
+  { value: "quality_check", label: t.orderStatus.quality_check },
+  { value: "ready_for_download", label: t.orderStatus.ready_for_download },
+  { value: "shipped", label: t.orderStatus.shipped },
+  { value: "complete", label: t.orderStatus.complete },
+  { value: "cancelled", label: t.orderStatus.cancelled },
 ];
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "bg-muted text-muted-foreground" },
-  label_sent: { label: "Label Sent", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  tapes_received: { label: "Received", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  in_progress: { label: "In Progress", color: "bg-accent/20 text-accent" },
-  quality_check: { label: "QC", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  ready_for_download: { label: "Ready", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  shipped: { label: "Shipped", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  complete: { label: "Complete", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive" },
+  pending: { label: t.orderStatus.pending, color: "bg-muted text-muted-foreground" },
+  label_sent: { label: t.orderStatus.label_sent, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  tapes_received: { label: t.orderStatus.tapes_received, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  in_progress: { label: t.orderStatus.in_progress, color: "bg-accent/20 text-accent" },
+  quality_check: { label: t.orderStatus.quality_check, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  ready_for_download: { label: t.orderStatus.ready_for_download, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  shipped: { label: t.orderStatus.shipped, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  complete: { label: t.orderStatus.complete, color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  cancelled: { label: t.orderStatus.cancelled, color: "bg-destructive/20 text-destructive" },
 };
 
 // Local AdminSidebar removed
@@ -108,10 +108,10 @@ export default function AdminOrderDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      toast({ title: "Order updated successfully" });
+      toast({ title: "Ordine aggiornato con successo" });
     },
     onError: () => {
-      toast({ title: "Failed to update order", variant: "destructive" });
+      toast({ title: "Errore nell'aggiornamento ordine", variant: "destructive" });
     },
   });
 
@@ -122,10 +122,10 @@ export default function AdminOrderDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders", id, "notes"] });
       setNewNote("");
-      toast({ title: "Note added successfully" });
+      toast({ title: "Nota aggiunta con successo" });
     },
     onError: () => {
-      toast({ title: "Failed to add note", variant: "destructive" });
+      toast({ title: "Errore nell'aggiunta nota", variant: "destructive" });
     },
   });
 
@@ -148,10 +148,10 @@ export default function AdminOrderDetail() {
         throw new Error(error.error || "Upload failed");
       }
 
-      toast({ title: "File uploaded successfully", description: "Google Drive link generated and customer notified." });
+      toast({ title: "File caricato con successo", description: "Link Google Drive generato e cliente notificato." });
       queryClient.invalidateQueries({ queryKey: ["/api/orders", id] });
     } catch (error: any) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      toast({ title: "Caricamento fallito", description: error.message, variant: "destructive" });
     } finally {
       setIsUploading(false);
       // Reset input
@@ -190,9 +190,9 @@ export default function AdminOrderDetail() {
           <AdminSidebar />
           <div className="flex flex-col flex-1 items-center justify-center">
             <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Order Not Found</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">{t.admin.orderNotFound}</h2>
             <Link href="/admin/orders">
-              <Button>Back to Orders</Button>
+              <Button>{t.admin.backToOrders}</Button>
             </Link>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function AdminOrderDetail() {
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
                 <h1 className="text-xl font-semibold text-foreground" data-testid="text-order-detail-title">
-                  Order {order.orderNumber}
+                  Ordine #{order.orderNumber}
                 </h1>
                 <Badge className={currentStatus.color}>{currentStatus.label}</Badge>
                 {order.processingSpeed === "rush" && (
@@ -230,7 +230,7 @@ export default function AdminOrderDetail() {
             <Link href="/">
               <Button variant="outline" size="sm" data-testid="button-view-site">
                 <Eye className="w-4 h-4 mr-2" />
-                View Site
+                {t.admin.viewSite}
               </Button>
             </Link>
           </header>
@@ -240,7 +240,7 @@ export default function AdminOrderDetail() {
               <div className="lg:col-span-2 space-y-6">
                 <Card data-testid="card-status-update">
                   <CardHeader>
-                    <CardTitle>Update Status</CardTitle>
+                    <CardTitle>{t.admin.updateStatus}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -263,7 +263,7 @@ export default function AdminOrderDetail() {
                         data-testid="button-save-status"
                       >
                         <Save className="w-4 h-4 mr-2" />
-                        {updateOrderMutation.isPending ? "Saving..." : "Save Status"}
+                        {updateOrderMutation.isPending ? "Salvataggio..." : t.admin.saveStatus}
                       </Button>
                     </div>
                   </CardContent>
@@ -271,7 +271,7 @@ export default function AdminOrderDetail() {
 
                 <Card data-testid="card-digital-delivery">
                   <CardHeader>
-                    <CardTitle>Digital Delivery</CardTitle>
+                    <CardTitle>{t.admin.digitalDelivery}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 border-2 border-dashed border-accent/20 rounded-xl bg-accent/5 flex flex-col items-center justify-center space-y-3 transition-colors hover:border-accent/40">
@@ -296,7 +296,7 @@ export default function AdminOrderDetail() {
                           disabled={isUploading}
                           asChild
                         >
-                          <span>{isUploading ? "Caricamento..." : "Seleziona File"}</span>
+                          <span>{isUploading ? t.admin.uploading : t.admin.uploadFile}</span>
                         </Button>
                       </label>
                     </div>
@@ -307,7 +307,7 @@ export default function AdminOrderDetail() {
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
                         <span className="bg-card px-2 text-muted-foreground font-bold tracking-widest">
-                          Oppure Inserisci Link Manuale
+                          {t.admin.manualLink}
                         </span>
                       </div>
                     </div>
@@ -326,7 +326,7 @@ export default function AdminOrderDetail() {
                           onClick={() => updateOrderMutation.mutate({ downloadUrl: downloadUrl })}
                           disabled={updateOrderMutation.isPending || !downloadUrl || downloadUrl === order.downloadUrl}
                         >
-                          Save Link
+                          {t.admin.saveLink}
                         </Button>
                       </div>
                     </div>
@@ -344,22 +344,22 @@ export default function AdminOrderDetail() {
 
                 <Card data-testid="card-order-details">
                   <CardHeader>
-                    <CardTitle>Order Details</CardTitle>
+                    <CardTitle>{t.admin.orderDetails}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Tapes</h4>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">{t.common.tapes}</h4>
                         <div className="space-y-1">
                           {Object.entries(tapeFormats).filter(([_, qty]) => qty > 0).map(([format, qty]) => (
                             <div key={format} className="flex justify-between text-sm">
                               <span className="text-foreground capitalize">{format}</span>
-                              <span className="text-muted-foreground">{qty} tapes</span>
+                              <span className="text-muted-foreground">{qty} {t.common.tapes}</span>
                             </div>
                           ))}
                           <div className="flex justify-between text-sm font-medium border-t pt-1 mt-2">
-                            <span className="text-foreground">Total</span>
-                            <span className="text-foreground">{order.totalTapes} tapes</span>
+                            <span className="text-foreground">Totale</span>
+                            <span className="text-foreground">{order.totalTapes} {t.common.tapes}</span>
                           </div>
                         </div>
                       </div>
@@ -368,21 +368,21 @@ export default function AdminOrderDetail() {
                         <h4 className="text-sm font-medium text-muted-foreground mb-2">Output</h4>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-foreground">Estimated footage</span>
-                            <span className="text-muted-foreground">{order.estimatedHours} hrs</span>
+                            <span className="text-foreground">{t.wizard.sections.duration}</span>
+                            <span className="text-muted-foreground">{order.estimatedHours} {t.common.hours}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-foreground">Formats</span>
+                            <span className="text-foreground">Formati</span>
                             <span className="text-muted-foreground">
                               {(order.outputFormats as string[]).map(f => f.toUpperCase()).join(", ")}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-foreground">Tape handling</span>
+                            <span className="text-foreground">Gestione</span>
                             <span className="text-muted-foreground capitalize">{order.tapeHandling}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-foreground">Processing</span>
+                            <span className="text-foreground">Priorità</span>
                             <span className="text-muted-foreground capitalize">{order.processingSpeed}</span>
                           </div>
                         </div>
@@ -391,7 +391,7 @@ export default function AdminOrderDetail() {
 
                     {order.specialInstructions && (
                       <div className="mt-6 p-4 bg-accent/10 rounded-lg">
-                        <h4 className="text-sm font-medium text-foreground mb-1">Special Instructions</h4>
+                        <h4 className="text-sm font-medium text-foreground mb-1">Istruzioni Speciali</h4>
                         <p className="text-sm text-muted-foreground">{order.specialInstructions}</p>
                       </div>
                     )}
@@ -400,12 +400,12 @@ export default function AdminOrderDetail() {
 
                 <Card data-testid="card-notes">
                   <CardHeader>
-                    <CardTitle>Notes</CardTitle>
+                    <CardTitle>{t.admin.notes}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4 mb-6">
                       {notes.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No notes yet.</p>
+                        <p className="text-sm text-muted-foreground">{t.admin.noNotes}</p>
                       ) : (
                         notes.map((note) => (
                           <div key={note.id} className="p-3 bg-secondary/50 rounded-lg">
@@ -420,7 +420,7 @@ export default function AdminOrderDetail() {
 
                     <div className="space-y-3">
                       <Textarea
-                        placeholder="Add a note..."
+                        placeholder="Aggiungi una nota..."
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         className="resize-none"
@@ -433,7 +433,7 @@ export default function AdminOrderDetail() {
                         disabled={addNoteMutation.isPending || !newNote.trim()}
                         data-testid="button-add-note"
                       >
-                        {addNoteMutation.isPending ? "Adding..." : "Add Note"}
+                        {addNoteMutation.isPending ? "Salvataggio..." : t.admin.addNote}
                       </Button>
                     </div>
                   </CardContent>
@@ -449,7 +449,7 @@ export default function AdminOrderDetail() {
               <div className="space-y-6">
                 <Card data-testid="card-customer-info">
                   <CardHeader>
-                    <CardTitle>Customer</CardTitle>
+                    <CardTitle>{t.admin.customer}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -466,7 +466,7 @@ export default function AdminOrderDetail() {
                 {order.tapeHandling === "return" && (
                   <Card data-testid="card-shipping">
                     <CardHeader>
-                      <CardTitle>Return Address</CardTitle>
+                      <CardTitle>{t.admin.returnAddress}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-start gap-3">
@@ -485,23 +485,23 @@ export default function AdminOrderDetail() {
 
                 <Card data-testid="card-pricing">
                   <CardHeader>
-                    <CardTitle>Pricing</CardTitle>
+                    <CardTitle>{t.admin.pricing}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span className="text-foreground">${order.subtotal}</span>
+                        <span className="text-muted-foreground">Subtotale</span>
+                        <span className="text-foreground">€{order.subtotal}</span>
                       </div>
                       {parseFloat(order.rushFee || "0") > 0 && (
                         <div className="flex justify-between text-accent">
-                          <span>Rush Fee</span>
-                          <span>+${order.rushFee}</span>
+                          <span>Supplemento Urgenza</span>
+                          <span>+€{order.rushFee}</span>
                         </div>
                       )}
                       <div className="flex justify-between font-medium border-t pt-2 mt-2">
-                        <span className="text-foreground">Total</span>
-                        <span className="text-lg text-accent">${order.total}</span>
+                        <span className="text-foreground">Totale</span>
+                        <span className="text-lg text-accent">€{order.total}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -509,14 +509,14 @@ export default function AdminOrderDetail() {
 
                 <Card data-testid="card-timeline">
                   <CardHeader>
-                    <CardTitle>Timeline</CardTitle>
+                    <CardTitle>{t.admin.timeline}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-foreground">Order placed</p>
+                          <p className="text-foreground">{t.admin.orderPlaced}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(order.createdAt!).toLocaleDateString()}
                           </p>
@@ -526,7 +526,7 @@ export default function AdminOrderDetail() {
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-accent" />
                           <div>
-                            <p className="text-foreground">Due date</p>
+                            <p className="text-foreground">{t.admin.dueDate}</p>
                             <p className="text-xs text-accent">
                               {new Date(order.dueDate).toLocaleDateString()}
                             </p>

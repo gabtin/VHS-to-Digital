@@ -21,14 +21,14 @@ import type { Order, TapeFormat } from "@shared/schema";
 import { OrderMessagesPanel } from "@/components/messaging/OrderMessagesPanel";
 
 const orderSteps = [
-  { id: "pending", label: "Order Placed", icon: FileText, description: "Your order has been confirmed" },
-  { id: "label_sent", label: "Label Sent", icon: Package, description: "Check your email for the shipping label" },
-  { id: "tapes_received", label: "Tapes Received", icon: Package, description: "We've received your tapes" },
-  { id: "in_progress", label: "Digitization In Progress", icon: Sparkles, description: "Converting your tapes" },
-  { id: "quality_check", label: "Quality Check", icon: Eye, description: "Reviewing the quality" },
-  { id: "ready_for_download", label: "Ready for Download", icon: Download, description: "Your files are ready!" },
-  { id: "shipped", label: "Shipped", icon: Truck, description: "Physical media on the way" },
-  { id: "complete", label: "Complete", icon: CheckCircle2, description: "All done!" },
+  { id: "pending", label: t.orderStatus.pending, icon: FileText, description: t.orderStatus.descriptions.pending },
+  { id: "label_sent", label: t.orderStatus.label_sent, icon: Package, description: t.orderStatus.descriptions.label_sent },
+  { id: "tapes_received", label: t.orderStatus.tapes_received, icon: Package, description: t.orderStatus.descriptions.tapes_received },
+  { id: "in_progress", label: t.orderStatus.in_progress, icon: Sparkles, description: t.orderStatus.descriptions.in_progress },
+  { id: "quality_check", label: t.orderStatus.quality_check, icon: Eye, description: t.orderStatus.descriptions.quality_check },
+  { id: "ready_for_download", label: t.orderStatus.ready_for_download, icon: Download, description: t.orderStatus.descriptions.ready_for_download },
+  { id: "shipped", label: t.orderStatus.shipped, icon: Truck, description: t.orderStatus.descriptions.shipped },
+  { id: "complete", label: t.orderStatus.complete, icon: CheckCircle2, description: t.orderStatus.descriptions.complete },
 ];
 
 export default function OrderStatus() {
@@ -66,12 +66,12 @@ export default function OrderStatus() {
         <Card className="max-w-md">
           <CardContent className="py-12 text-center">
             <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Order Not Found</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">{t.shippingLabel.orderNotFound}</h2>
             <p className="text-muted-foreground mb-6">
-              We couldn't find an order with that number. Please check and try again.
+              {t.shippingLabel.orderNotFoundDesc}
             </p>
             <Link href="/dashboard">
-              <Button data-testid="button-back-dashboard">Back to Dashboard</Button>
+              <Button data-testid="button-back-dashboard">{t.shippingLabel.backToDashboard}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -90,31 +90,31 @@ export default function OrderStatus() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link href="/dashboard" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Dashboard
+            {t.common.back}
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-foreground" data-testid="text-order-number">
-                  Order {order.orderNumber}
+                  Ordine #{order.orderNumber}
                 </h1>
                 <Badge className={
                   isComplete
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-accent/20 text-accent"
                 }>
-                  {orderSteps[currentStepIndex]?.label || "Processing"}
+                  {orderSteps[currentStepIndex]?.label || "In Elaborazione"}
                 </Badge>
               </div>
               <p className="text-muted-foreground">
-                Ordered on {new Date(order.createdAt!).toLocaleDateString()}
+                {t.orderStatus.timeline.orderPlaced}: {new Date(order.createdAt!).toLocaleDateString()}
               </p>
             </div>
             {isReadyForDownload && order.downloadUrl && (
               <a href={order.downloadUrl} target="_blank" rel="noopener noreferrer">
                 <Button className="bg-accent text-accent-foreground" data-testid="button-download-files">
                   <Download className="w-4 h-4 mr-2" />
-                  Download Files
+                  {t.dashboard.download}
                 </Button>
               </a>
             )}
@@ -127,7 +127,7 @@ export default function OrderStatus() {
           <div className="lg:col-span-2">
             <Card data-testid="card-progress-tracker">
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-6">Order Progress</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-6">Avanzamento Ordine</h2>
 
                 <div className="relative">
                   <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
@@ -165,7 +165,7 @@ export default function OrderStatus() {
                             </p>
                             {isCurrent && !isComplete && (
                               <p className="text-sm text-accent mt-2">
-                                In progress...
+                                {t.orderStatus.in_progress}...
                               </p>
                             )}
                           </div>
@@ -180,7 +180,7 @@ export default function OrderStatus() {
             {!isComplete && (
               <Card className="mt-6" data-testid="card-next-steps">
                 <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">What's Next?</h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">{t.orderStatus.nextSteps.title}</h2>
                   {order.status === "pending" || order.status === "label_sent" ? (
                     <div className="space-y-4">
                       <div className="flex items-start gap-4">
@@ -188,10 +188,10 @@ export default function OrderStatus() {
                           <span className="text-sm font-medium text-accent">1</span>
                         </div>
                         <div>
-                          <h4 className="font-medium text-foreground">Download your shipping label</h4>
-                          <p className="text-sm text-muted-foreground mt-1">Check your email for the prepaid label</p>
+                          <h4 className="font-medium text-foreground">{t.orderStatus.nextSteps.step1.title}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{t.orderStatus.nextSteps.step1.desc}</p>
                           <Button variant="outline" size="sm" className="mt-2" data-testid="button-download-label">
-                            Download Shipping Label
+                            {t.orderStatus.nextSteps.step1.btn}
                           </Button>
                         </div>
                       </div>
@@ -200,9 +200,9 @@ export default function OrderStatus() {
                           <span className="text-sm font-medium text-muted-foreground">2</span>
                         </div>
                         <div>
-                          <h4 className="font-medium text-foreground">Pack your tapes securely</h4>
+                          <h4 className="font-medium text-foreground">{t.orderStatus.nextSteps.step2.title}</h4>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Use bubble wrap or padding to protect your tapes during shipping
+                            {t.orderStatus.nextSteps.step2.desc}
                           </p>
                         </div>
                       </div>
@@ -211,17 +211,17 @@ export default function OrderStatus() {
                           <span className="text-sm font-medium text-muted-foreground">3</span>
                         </div>
                         <div>
-                          <h4 className="font-medium text-foreground">Drop off at any USPS location</h4>
+                          <h4 className="font-medium text-foreground">{t.orderStatus.nextSteps.step3.title}</h4>
                           <p className="text-sm text-muted-foreground mt-1">
-                            We'll notify you when we receive your package
+                            {t.orderStatus.nextSteps.step3.desc}
                           </p>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <p className="text-muted-foreground">
-                      We're working on your order! You'll receive an email when your files are ready.
-                      {order.dueDate && ` Estimated completion: ${new Date(order.dueDate).toLocaleDateString()}.`}
+                      {t.orderStatus.nextSteps.waitMessage}
+                      {order.dueDate && ` ${t.orderStatus.timeline.dueDate}: ${new Date(order.dueDate).toLocaleDateString()}.`}
                     </p>
                   )}
                 </CardContent>
@@ -232,20 +232,20 @@ export default function OrderStatus() {
           <div className="lg:col-span-1 space-y-6">
             <Card data-testid="card-order-details">
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Order Details</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">{t.checkout.paymentTitle.replace("Pagamento", "Dettagli")}</h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total tapes</span>
+                    <span className="text-muted-foreground">{t.wizard.step2.totalTapes}</span>
                     <span className="text-foreground font-medium">{order.totalTapes}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Estimated hours</span>
-                    <span className="text-foreground font-medium">{order.estimatedHours} hrs</span>
+                    <span className="text-muted-foreground">{t.wizard.sections.duration}</span>
+                    <span className="text-foreground font-medium">{order.estimatedHours} {t.common.hours}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Processing</span>
+                    <span className="text-muted-foreground">{t.wizard.sections.processing}</span>
                     <span className="text-foreground font-medium">
-                      {order.processingSpeed === "rush" ? "Rush (5 days)" : "Standard"}
+                      {order.processingSpeed === "rush" ? t.wizard.step6.rushTitle : t.wizard.step6.standardTitle}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -255,8 +255,8 @@ export default function OrderStatus() {
                     </span>
                   </div>
                   <div className="border-t pt-3 flex justify-between">
-                    <span className="text-foreground font-medium">Total</span>
-                    <span className="text-lg font-bold text-accent">${order.total}</span>
+                    <span className="text-foreground font-medium">Totale</span>
+                    <span className="text-lg font-bold text-accent">{order.total}€</span>
                   </div>
                 </div>
               </CardContent>
@@ -265,7 +265,7 @@ export default function OrderStatus() {
             {order.tapeHandling === "return" && (
               <Card data-testid="card-shipping-address">
                 <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4">Return Address</h2>
+                  <h2 className="text-lg font-semibold text-foreground mb-4">{t.wizard.step5.returnTitle} - Indirizzo</h2>
                   <div className="text-sm text-muted-foreground">
                     <p className="text-foreground font-medium">{order.shippingName}</p>
                     <p>{order.shippingAddress}</p>

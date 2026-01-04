@@ -272,7 +272,7 @@ export async function registerRoutes(
       if (totalTapes > 0) {
         lineItems.push({
           price_data: {
-            currency: 'usd',
+            currency: 'eur',
             product_data: {
               name: `VHS-to-Digital Conversion (${totalTapes} tapes)`,
               description: `${parsedConfig.estimatedHours} hours of footage`,
@@ -286,7 +286,7 @@ export async function registerRoutes(
       if (serverPricing.rushFee > 0) {
         lineItems.push({
           price_data: {
-            currency: 'usd',
+            currency: 'eur',
             product_data: {
               name: 'Rush Processing Fee',
               description: 'Priority 3-5 day processing',

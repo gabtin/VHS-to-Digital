@@ -232,7 +232,7 @@ export default function About() {
             <p className="text-muted-foreground mb-4">
               {t.about.securityCTA}
             </p>
-            <a href="mailto:security@reelrevive.com">
+            <a href="mailto:info@memorieindigitale.it">
               <Button variant="outline" data-testid="button-contact-security">
                 {t.about.securityButton}
               </Button>

@@ -15,7 +15,7 @@ export const t = {
   hero: {
     badge: "Scelto da oltre 50.000 famiglie",
     title: "I Tuoi Ricordi Meritano una Seconda Vita",
-    subtitle: "Converti le tue videocassette VHS in file digitali cristallini. Preserva decenni di momenti irripetibili prima che sia troppo tardi.",
+    subtitle: "Le videocassette si degradano nel tempo e i tuoi ricordi rischiano di andare persi per sempre. Digitalizzale ora e preservale in alta qualità.",
     cta: "Inizia - Preventivo Gratuito",
     secondary: "Scopri Come Funziona",
   },
@@ -329,10 +329,45 @@ export const t = {
     tapes_received: "Cassette Ricevute",
     in_progress: "In Lavorazione",
     quality_check: "Controllo Qualita",
-    ready_for_download: "Pronto",
+    ready_for_download: "Pronto per il Download",
     shipped: "Spedito",
     complete: "Completato",
     cancelled: "Annullato",
+
+    descriptions: {
+      pending: "Il tuo ordine è stato confermato",
+      label_sent: "Controlla la tua email per l'etichetta di spedizione",
+      tapes_received: "Abbiamo ricevuto le tue cassette",
+      in_progress: "Stiamo convertendo le tue cassette",
+      quality_check: "Stiamo revisionando la qualità",
+      ready_for_download: "I tuoi file sono pronti!",
+      shipped: "Supporti fisici in viaggio per la restituzione",
+      complete: "Tutto completato!",
+      cancelled: "Ordine annullato",
+    },
+
+    timeline: {
+      orderPlaced: "Ordine effettuato",
+      dueDate: "Data di consegna prevista",
+    },
+
+    nextSteps: {
+      title: "Cosa succede ora?",
+      step1: {
+        title: "Scarica l'etichetta",
+        desc: "Controlla l'email per il PDF prepagato",
+        btn: "Scarica Etichetta"
+      },
+      step2: {
+        title: "Imballa le cassette",
+        desc: "Usa pluriball o imbottitura per proteggerle"
+      },
+      step3: {
+        title: "Spedisci il pacco",
+        desc: "Consegna all'ufficio postale o punto di ritiro più vicino"
+      },
+      waitMessage: "Stiamo lavorando al tuo ordine! Riceverai un'email quando i file saranno pronti."
+    }
   },
 
   shippingLabel: {
@@ -561,6 +596,61 @@ export const t = {
     tape: "cassetta",
     EUR: "EUR",
   },
+
+  admin: {
+    orderNotFound: "Ordine Non Trovato",
+    backToOrders: "Torna agli Ordini",
+    updateStatus: "Aggiorna Stato",
+    saveStatus: "Salva Stato",
+    digitalDelivery: "Consegna Digitale",
+    uploadFile: "Carica File",
+    manualLink: "Oppure Inserisci Link Manuale",
+    saveLink: "Salva Link",
+    orderDetails: "Dettagli Ordine",
+    notes: "Note",
+    addNote: "Aggiungi Nota",
+    noNotes: "Nessuna nota presente.",
+    customer: "Cliente",
+    returnAddress: "Indirizzo di Restituzione",
+    pricing: "Dettaglio Costi",
+    timeline: "Cronologia",
+    orderPlaced: "Ordine effettuato",
+    dueDate: "Scadenza",
+    viewSite: "Vedi Sito",
+    uploading: "Caricamento...",
+
+    settings: {
+      title: "Impostazioni",
+      addService: "Aggiungi Servizio",
+      addNewService: "Aggiungi Nuovo Servizio",
+      type: "Tipo",
+      systemName: "Nome Sistema (ID)",
+      displayLabel: "Etichetta Visualizzata",
+      price: "Prezzo (EUR)",
+      createService: "Crea Servizio",
+      cancel: "Annulla",
+      pricingScheme: "Schema Prezzi",
+      pricingDesc: "Regola i costi per i vari servizi e opzioni.",
+      serviceAvailability: "Disponibilità Servizi",
+      availabilityDesc: "Attiva o disattiva i formati e prodotti offerti.",
+      tapeFormats: "Formati Cassette",
+      outputOptions: "Opzioni Output",
+      label: "Etichetta",
+      id: "ID",
+      confirmDelete: "Sei sicuro? Potrebbe influenzare gli ordini esistenti se eliminato.",
+      toasts: {
+        pricingUpdated: "Prezzi aggiornati",
+        pricingSaved: "Le modifiche sono state salvate con successo.",
+        updateFailed: "Aggiornamento fallito",
+        saveFailed: "Impossibile salvare le modifiche.",
+        availabilityUpdated: "Disponibilità aggiornata",
+        serviceAdded: "Servizio aggiunto",
+        newServiceAdded: "Il nuovo servizio è stato aggiunto correttamente.",
+        serviceDeleted: "Servizio eliminato",
+        serviceRemoved: "Il servizio è stato rimosso."
+      }
+    }
+  }
 };
 
 export type Translations = typeof t;

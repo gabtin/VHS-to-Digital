@@ -94,8 +94,8 @@ export default function Home() {
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-display font-light text-stone-900 leading-[1.05] tracking-tight mb-8">
               I Tuoi Ricordi meritano una <span className="italic">Seconda Vita</span>
             </h1>
-            <p className="text-xl sm:text-2xl text-stone-600 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-              Converti le tue vecchie videocassette in file digitali cristallini. Preserva i tuoi momenti prima che sbiadiscano.
+            <p className="text-xl sm:text-2xl text-stone-600 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
+              Le videocassette si degradano nel tempo e i tuoi ricordi rischiano di andare persi per sempre. Digitalizzale ora e preservale in alta qualità.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/get-started">
@@ -212,7 +212,7 @@ export default function Home() {
       <section className="py-24 px-6 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-display mb-4">Prezzi Semplici</h2>
+            <h2 className="text-4xl sm:text-5xl font-display mb-4 text-stone-900">Prezzi Semplici</h2>
             <p className="text-stone-500 font-light italic">Nessun costo nascosto. Sconto su volumi elevati.</p>
           </div>
 
@@ -254,8 +254,8 @@ export default function Home() {
             </div>
 
             <Link href="/get-started">
-              <Button className="w-full h-16 rounded-xl text-lg font-bold shadow-xl mt-12 bg-stone-900 hover:bg-stone-800">
-                Inizia il tuo progetto
+              <Button className="w-full h-16 rounded-xl text-lg font-bold shadow-xl mt-12 bg-stone-900 hover:bg-stone-800 text-white">
+                Configura la tua conversione
               </Button>
             </Link>
 

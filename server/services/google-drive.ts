@@ -11,11 +11,6 @@ export class GoogleDriveService {
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
         const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
-        console.log('[GoogleDriveService] Initializing with User OAuth2...');
-        console.log('[GoogleDriveService] Client ID present:', !!clientId);
-        console.log('[GoogleDriveService] Client Secret present:', !!clientSecret);
-        console.log('[GoogleDriveService] Refresh Token present:', !!refreshToken);
-
         if (!clientId || !clientSecret || !refreshToken) {
             console.warn('[GoogleDriveService] OAuth2 credentials not fully configured. Using MOCK mode.');
             this.drive = null;
@@ -34,7 +29,6 @@ export class GoogleDriveService {
             });
 
             this.drive = google.drive({ version: 'v3', auth: oauth2Client });
-            console.log('[GoogleDriveService] Drive client initialized with User OAuth2.');
         } catch (error) {
             console.error('[GoogleDriveService] Failed to initialize Google Auth:', error);
             this.drive = null;
@@ -51,7 +45,6 @@ export class GoogleDriveService {
         }
 
         const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
-        console.log('[GoogleDriveService] Creating folder for order:', orderNumber, 'under parent:', parentFolderId);
 
         try {
             const fileMetadata = {
