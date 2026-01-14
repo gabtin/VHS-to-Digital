@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { Order, TapeFormat } from "@shared/schema";
 import { OrderMessagesPanel } from "@/components/messaging/OrderMessagesPanel";
+import { t } from "@/lib/translations";
 
 const orderSteps = [
   { id: "pending", label: t.orderStatus.pending, icon: FileText, description: t.orderStatus.descriptions.pending },

@@ -45,6 +45,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Order, OrderNote, TapeFormat } from "@shared/schema";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { AdminOrderMessagesPanel } from "@/components/messaging/AdminOrderMessagesPanel";
+import { t } from "@/lib/translations";
 
 const statusOptions = [
   { value: "pending", label: t.orderStatus.pending },
