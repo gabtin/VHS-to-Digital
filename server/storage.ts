@@ -186,7 +186,7 @@ export class DatabaseStorage implements IStorage {
   async seedInitialConfigs(): Promise<void> {
     // Seed pricing if empty
     const existingPricing = await this.getPricingConfigs();
-    if (existingPricing.length === 0) {
+    if (!existingPricing || existingPricing.length === 0) {
       const initialPricing = [
         { key: "basePricePerTape", value: PRICING.basePricePerTape.toString(), description: "Base price per tape" },
         { key: "pricePerHour", value: PRICING.pricePerHour.toString(), description: "Price per hour of conversion" },
@@ -201,7 +201,7 @@ export class DatabaseStorage implements IStorage {
 
     // Seed availability if empty
     const existingAvailability = await this.getProductAvailability();
-    if (existingAvailability.length === 0) {
+    if (!existingAvailability || existingAvailability.length === 0) {
       const tapeInitial = tapeFormats.map(name => ({
         type: "tape_format" as const,
         name,

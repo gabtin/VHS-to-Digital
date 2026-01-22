@@ -482,16 +482,16 @@ export default function Checkout() {
                                         <Truck className="w-6 h-6 text-stone-600" />
                                       </div>
                                       <div>
-                                        <h4 className="font-bold text-foreground">{rate.carrierName}</h4>
-                                        <p className="text-sm text-muted-foreground">{rate.serviceName}</p>
+                                        <h4 className="font-bold text-foreground text-lg">{rate.carrierName}</h4>
+                                        <p className="text-sm text-stone-700 font-medium">{rate.serviceName}</p>
                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground mt-1">
                                           {rate.type === 'pickup' ? 'Ritiro a Casa tua' : 'Portalo tu in un Negozio'}
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="text-right">
-                                      <div className="font-bold text-lg">{rate.price.toFixed(2)} {rate.currency}</div>
-                                      <p className="text-xs text-muted-foreground">Consegna: {rate.estimatedDays} gg</p>
+                                    <div className="text-right flex flex-col items-end">
+                                      <div className="font-bold text-xl text-primary">{rate.price.toFixed(2)} {rate.currency}</div>
+                                      <p className="text-xs text-stone-600 font-medium">Consegna: {rate.estimatedDays} gg</p>
                                     </div>
                                   </div>
                                 </div>
@@ -519,8 +519,8 @@ export default function Checkout() {
                                               selectedServicePoint?.id === point.id ? "bg-primary/10 border-primary" : "bg-white hover:bg-stone-50"
                                             )}
                                           >
-                                            <div className="font-bold">{point.name}</div>
-                                            <div className="text-muted-foreground text-xs">{point.street}, {point.city}</div>
+                                            <div className="font-bold text-stone-900">{point.name}</div>
+                                            <div className="text-stone-600 text-xs font-medium">{point.street}, {point.city}</div>
                                           </div>
                                         ))}
                                       </div>

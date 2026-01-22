@@ -12,22 +12,48 @@ describe("Sendcloud Integration", () => {
     });
 
     describe("Service Logic", () => {
-        it("getServicePoints should return mock data when API fails with 400 (inactive)", async () => {
-            // Mock a 400 "not activated" error
+        it("getServicePoints should throw error when API fails (no more mock fallback)", async () => {
+            // Mock a 400 error
             (fetch as any).mockResolvedValueOnce({
                 ok: false,
                 status: 400,
                 text: () => Promise.resolve(JSON.stringify({
-                    error: { message: "Service point support is not activated" }
+                    error: { message: "Some API error" }
                 })),
                 json: () => Promise.resolve({
-                    error: { message: "Service point support is not activated" }
+                    error: { message: "Some API error" }
                 })
             });
 
+            await expect(sendcloudService.getServicePoints("IT", "Milano", "20121"))
+                .rejects.toThrow("Service Points API Error");
+        });
+
+        it("getServicePoints should return normalized real API data", async () => {
+            // Mock real SendCloud response structure
+            (fetch as any).mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve([
+                    {
+                        id: 999,
+                        name: "Real Point",
+                        street: "Real Street",
+                        city: "Milan",
+                        postal_code: "20121",
+                        carrier: "ups",
+                        latitude: "45.0",
+                        longitude: "9.0"
+                    }
+                ])
+            });
+
             const points = await sendcloudService.getServicePoints("IT", "Milano", "20121");
-            expect(points.length).toBeGreaterThan(0);
-            expect(points[0].name).toContain("Mock Pickup Point");
+            expect(points.length).toBe(1);
+            expect(points[0]).toMatchObject({
+                name: "Real Point",
+                street: "Real Street",
+                carrier: "ups"
+            });
         });
 
         it("createParcel should generate correct inbound payload (destination = Lab)", async () => {
@@ -83,8 +109,8 @@ describe("Sendcloud Integration", () => {
             expect(Array.isArray(response.body)).toBe(true);
         });
 
-        it("GET /api/shipping/service-points should return 200 (even with mock fallback)", async () => {
-            // Mock 400 error to trigger fallback
+        it("GET /api/shipping/service-points should return 500 when API fails", async () => {
+            // Mock 400 error
             (fetch as any).mockResolvedValueOnce({
                 ok: false,
                 status: 400,
@@ -94,8 +120,7 @@ describe("Sendcloud Integration", () => {
             const response = await request(app)
                 .get("/api/shipping/service-points?country=IT&city=Milano&zip=20121");
 
-            expect(response.status).toBe(200);
-            expect(response.body.length).toBeGreaterThan(0);
+            expect(response.status).toBe(500);
         });
     });
 });

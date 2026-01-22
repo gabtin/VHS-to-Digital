@@ -39,6 +39,21 @@ export class SendcloudService {
         };
     }
 
+    private localizeServiceName(name: string): string {
+        const mappings: Record<string, string> = {
+            "unstamped letter": "Spedizione Standard Postale",
+            "service point": "Punto di Ritiro",
+            "home delivery": "Consegna a Domicilio"
+        };
+
+        const lowerName = name.toLowerCase();
+        for (const [key, value] of Object.entries(mappings)) {
+            if (lowerName.includes(key)) return value;
+        }
+
+        return name;
+    }
+
     /**
      * Get Shipping Rates (Methods + Prices)
      * Sendcloud V2 requires getting methods first, then (optionally) specific prices.
@@ -59,9 +74,7 @@ export class SendcloudService {
                 from_country: from.country,
                 to_postal_code: to.zip,
                 to_country: to.country,
-                weight: totalWeight.toString(), // Sendcloud usually takes weight in grams or kg depending on config. V2 is usually KG/G. Let's assume input is KG, Sendcloud takes Grams usually or KG? Docs say: "weight" in granularity defined (usually grams).
-                // Let's assume input `parcels` weight is KG. Sendcloud expects Grams usually for 'shipping_products' but 'shipping_methods' might be different.
-                // Let's check docs: "weight": "Weight of the parcel in kilograms", ok "kilograms".
+                weight: totalWeight.toString(), // Sendcloud usually takes weight in kilograms, as per docs.
             });
 
             const url = `${this.baseUrl}/shipping_methods?${params.toString()}`;
@@ -82,8 +95,8 @@ export class SendcloudService {
                 // Determine price. Sendcloud returns 'price' in the method object for the given query params.
                 return {
                     serviceId: m.id.toString(),
-                    carrierName: m.carrier,
-                    serviceName: m.name,
+                    carrierName: m.carrier.toUpperCase(),
+                    serviceName: this.localizeServiceName(m.name),
                     price: m.price, // Raw price
                     currency: 'EUR', // Sendcloud usually returns in account currency
                     type: m.to_post_number ? "pickup" : "dropoff", // 'to_post_number' usually implies service point delivery
@@ -100,36 +113,63 @@ export class SendcloudService {
 
     /**
      * Get Service Points (Pickup Locations)
+     * Now using the real SendCloud Service Points API
      */
-    async getServicePoints(country: string, city: string, zip: string, radius: number = 1000): Promise<any[]> {
+    async getServicePoints(country: string, city: string, zip: string, radius: number = 5000): Promise<any[]> {
+        // Common carriers available in Italy for service points
+        const carriers = ["poste_italiane", "brt", "ups", "dhl", "gls"];
+
         const params = new URLSearchParams({
             country: country,
-            city: city,
             postal_code: zip,
-            radius: radius.toString() // meters? Sendcloud usually takes meters or km? Docs: 'radius' Default 2000 (meters?)
+            radius: radius.toString(), // in meters
+            carriers: carriers.join(",")
         });
+
+        // Only add city if provided (postal_code is usually sufficient)
+        if (city) {
+            params.append("city", city);
+        }
 
         // Service Points API has a different base URL
         const url = `https://servicepoints.sendcloud.sc/api/v2/service-points?${params.toString()}`;
         console.log("Fetching Service Points:", url);
 
-        try {
-            // Service Points endpoint often requires no auth or Basic auth? V2 usually requires Auth.
-            const response = await fetch(url, { headers: this.getHeaders() });
-            if (!response.ok) {
-                console.error("Service Points Error:", await response.text());
-                // Fallback to mock data if API is inactive or not found
-                return this.getMockServicePoints();
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.warn("Fetch Service Points Failed, returning mock data for testing.");
-            return this.getMockServicePoints();
+        const response = await fetch(url, { headers: this.getHeaders() });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Service Points Error:", errorText);
+            throw new Error(`Service Points API Error: ${response.status} - ${errorText}`);
         }
+
+        const data = await response.json();
+
+        // Normalize the response to ensure consistent field names for frontend
+        const servicePoints = Array.isArray(data) ? data : (data.service_points || data.servicepoints || []);
+
+        return servicePoints.map((point: any) => ({
+            id: point.id,
+            name: point.name,
+            street: point.street || point.address,
+            house_number: point.house_number || "",
+            city: point.city,
+            postal_code: point.postal_code,
+            country: point.country,
+            carrier: point.carrier,
+            latitude: point.latitude,
+            longitude: point.longitude,
+            distance: point.distance,
+            open_tomorrow: point.open_tomorrow,
+            opening_hours: point.formatted_opening_times || point.opening_hours
+        }));
     }
 
-    private getMockServicePoints(): any[] {
+    /**
+     * Get mock service points - for testing purposes only
+     * @internal
+     */
+    _getMockServicePoints(): any[] {
         return [
             {
                 id: 12345,
